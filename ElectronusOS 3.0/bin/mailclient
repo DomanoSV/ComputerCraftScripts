@@ -1,0 +1,543 @@
+-- MailClient, developed by NitrogenFingers and DomanoSV to work with ElectronusOS --
+-- Variables --
+tArgs = {...}
+local modemSide,username = tArgs[1],tArgs[2]
+local side = tArgs[1]
+local w,h = term.getSize()
+local centerArchiveBar = math.ceil((w / 2) - (42 / 2))
+local centerUnreadBar = math.ceil((w / 2) - (26 / 2))
+local umail = { }
+local rmail = { }
+local slc = 1
+local serverid = 0
+local confirmmsg = ""
+local newmsg = ""
+local newto = 0
+local emidx = 1
+local emlist = { }
+local state = 1
+local states = {
+  ["TOP"] = {
+    id = 1,
+    options = 6
+  },
+  ["COMPOSETEXT"] = {
+    id = 2
+  },
+  ["COMPOSEMENU"] = {
+    id = 3,
+    options = 2
+  },
+  ["UNREAD"] = {
+    id = 4,
+    options = 2
+  },
+  ["ARCHIVE"] = {
+    id = 5,
+    options = 4
+  },
+  ["CONFIRM"] = {
+    id = 6,
+    options = 1
+  }
+}
+
+-- Helper Functions --
+
+function split(str, pattern)
+  local t = { }
+  local fpat = "(.-)" .. pattern
+  local last_end = 1
+  local s, e, cap = str:find(fpat, 1)
+  while s do
+    if s ~= 1 or cap ~= "" then
+      table.insert(t,cap)
+    end
+    last_end = e+1
+    s, e, cap = str:find(fpat, last_end)
+  end
+  if last_end <= #str then
+    cap = str:sub(last_end)
+    table.insert(t, cap)
+  end
+  return t
+end
+
+-- Interface Drawing --
+
+function printHeader()
+  term.setCursorPos(1,1)
+  term.setBackgroundColor(colors.cyan)
+  term.setTextColor(colors.white)
+  term.write(string.rep(" ", w))
+  printCentered(1, "ElectronusOS Email Client")
+  term.setCursorPos(1,2)
+  term.setBackgroundColor(colors.blue)
+  term.setTextColor(colors.white)
+  term.write(string.rep(" ", w))
+  term.setCursorPos(1,2)
+  term.write(" Hello, "..username.."!")
+  printRight(2, table.getn(umail).." New Message(s)")
+  term.setCursorPos(1,h)
+  term.setBackgroundColor(colors.blue)
+  term.setTextColor(colors.lightGray)
+  term.write(string.rep(" ", w))
+  term.setBackgroundColor(colors.white)
+  term.setTextColor(colors.gray)
+end
+
+function printConfirm()
+  local boxbordersize = 26
+  local boxsize = 24
+  term.setBackgroundColor(colors.blue)
+  printCentered(7, string.rep(" ", boxbordersize))
+  printCentered(8, string.rep(" ", boxbordersize))
+  printCentered(9, string.rep(" ", boxbordersize))
+  printCentered(10, string.rep(" ", boxbordersize))
+  printCentered(11, string.rep(" ", boxbordersize))
+  printCentered(12, string.rep(" ", boxbordersize))
+  printCentered(13, string.rep(" ", boxbordersize))
+  term.setBackgroundColor(colors.white)
+  printCentered(8, string.rep(" ", boxsize))
+  printCentered(9, string.rep(" ", boxsize))
+  printCentered(10, string.rep(" ", boxsize))
+  printCentered(11, string.rep(" ", boxsize))
+  printCentered(12, string.rep(" ", boxsize))
+  printCentered(9, confirmmsg)
+  term.setBackgroundColor(colors.blue)
+  term.setTextColor(colors.lightGray)
+  printCentered(11, "  OK  ")
+  term.setBackgroundColor(colors.white)
+  term.setTextColor(colors.gray)
+end
+
+function printStored()
+  term.setBackgroundColor(colors.lightGray)
+  term.setTextColor(colors.gray)
+  term.setCursorPos(1,3)
+  term.write(string.rep(" ", w))
+  term.setCursorPos(1,4)
+  term.write(string.rep(" ", w))
+  term.setCursorPos(1,3)
+  term.write("From: "..emlist[emidx].from)
+  term.setCursorPos(1,4)
+  term.write("Sent at: "..textutils.formatTime(tonumber(emlist[emidx].time)))
+  term.setBackgroundColor(colors.white)
+  term.setTextColor(colors.gray)
+  term.setCursorPos(1,6)
+  print(emlist[emidx].body)
+  term.setCursorPos(1,h-1)
+  term.write("Reading Email "..emidx.." of "..table.getn(emlist))  
+end
+
+function printArchiveMenu()
+  local ws = string.rep(" ", 4)
+  term.setCursorPos(centerArchiveBar, h)
+  if slc == 1 then
+   term.setBackgroundColor(colors.orange)
+   term.setTextColor(colors.lightBlue)
+   term.write("  <  ")
+  else 
+   term.setBackgroundColor(colors.blue)
+   term.setTextColor(colors.lightGray)
+   term.write("  <  ")
+  end
+  term.setBackgroundColor(colors.blue)
+  term.setTextColor(colors.lightGray)
+  term.write(ws)
+  if slc == 2 then
+   term.setBackgroundColor(colors.orange)
+   term.setTextColor(colors.lightBlue)
+   term.write("   BACK   ")
+  else 
+   term.setBackgroundColor(colors.blue)
+   term.setTextColor(colors.lightGray)
+   term.write("   BACK   ")
+  end
+  term.setBackgroundColor(colors.blue)
+  term.setTextColor(colors.lightGray)
+  term.write(ws)
+  if slc == 3 then
+   term.setBackgroundColor(colors.orange)
+   term.setTextColor(colors.lightBlue)
+   term.write("  DELETE  ")
+  else 
+   term.setBackgroundColor(colors.blue)
+   term.setTextColor(colors.lightGray)
+   term.write("  DELETE  ")
+  end
+  term.setBackgroundColor(colors.blue)
+  term.setTextColor(colors.lightGray)
+  term.write(ws)
+  if slc == 4 then
+   term.setBackgroundColor(colors.orange)
+   term.setTextColor(colors.lightBlue)
+   term.write("  >  ")
+  else 
+   term.setBackgroundColor(colors.blue)
+   term.setTextColor(colors.lightGray)
+   term.write("  >  ")
+  end
+  term.setBackgroundColor(colors.white)
+  term.setTextColor(colors.gray)
+end
+
+function printUnreadMenu()
+  local ws = string.rep(" ", 5)
+  term.setCursorPos(centerUnreadBar, h)
+  if slc == 1 then
+   term.setBackgroundColor(colors.orange)
+   term.setTextColor(colors.lightBlue)
+   term.write("  ARCHIVE  ")
+  else 
+   term.setBackgroundColor(colors.blue)
+   term.setTextColor(colors.lightGray)
+   term.write("  ARCHIVE  ")
+  end
+  term.setBackgroundColor(colors.blue)
+  term.setTextColor(colors.lightGray)
+  term.write(ws)
+  if slc == 2 then
+   term.setBackgroundColor(colors.orange)
+   term.setTextColor(colors.lightBlue)
+   term.write("  DELETE  ")
+  else 
+   term.setBackgroundColor(colors.blue)
+   term.setTextColor(colors.lightGray)
+   term.write("  DELETE  ")
+  end
+  term.setBackgroundColor(colors.white)
+  term.setTextColor(colors.gray)
+end
+
+function printCompose()
+  term.setCursorPos(1,4)
+  term.write("To:")
+  term.setCursorPos(1,5)
+  term.write("Body:")
+  term.setCursorPos(1,h-1)
+  term.write("Hit Enter twice to end the email.")
+end
+
+function printComposeMenu()
+  local ws = string.rep(" ", 4)
+  term.setCursorPos(centerUnreadBar, h)
+  if slc == 1 then
+   term.setBackgroundColor(colors.orange)
+   term.setTextColor(colors.lightBlue)
+   term.write("   SEND   ")
+  else 
+   term.setBackgroundColor(colors.blue)
+   term.setTextColor(colors.lightGray)
+   term.write("   SEND   ")
+  end
+  term.setBackgroundColor(colors.blue)
+  term.setTextColor(colors.lightGray)
+  term.write(ws)
+  if slc == 2 then
+   term.setBackgroundColor(colors.orange)
+   term.setTextColor(colors.lightBlue)
+   term.write("  DELETE  ")
+  else 
+   term.setBackgroundColor(colors.blue)
+   term.setTextColor(colors.lightGray)
+   term.write("  DELETE  ")
+  end
+  term.setBackgroundColor(colors.white)
+  term.setTextColor(colors.gray)
+end
+
+function printTopMenu()
+  printCentered(4, "Select Option:")
+  if slc == 1 then
+   term.setBackgroundColor(colors.blue)
+   term.setTextColor(colors.lightGray)
+   printCentered(6, "[1] Compose Email    ")
+  else 
+   term.setBackgroundColor(colors.white)
+   term.setTextColor(colors.gray)
+   printCentered(6, "[1] Compose Email    ")
+  end
+  if slc == 2 then
+   term.setBackgroundColor(colors.blue)
+   term.setTextColor(colors.lightGray)
+   printCentered(7, "[2] Unread Emails    ")
+  else 
+   term.setBackgroundColor(colors.white)
+   term.setTextColor(colors.gray)
+   printCentered(7, "[2] Unread Emails    ")
+  end
+  if slc == 3 then
+   term.setBackgroundColor(colors.blue)
+   term.setTextColor(colors.lightGray)
+   printCentered(8, "[3] Archived Emails  ")
+  else 
+   term.setBackgroundColor(colors.white)
+   term.setTextColor(colors.gray)
+   printCentered(8, "[3] Archived Emails  ")
+  end
+  if slc == 4 then
+   term.setBackgroundColor(colors.blue)
+   term.setTextColor(colors.lightGray)
+   printCentered(9, "[4] Refresh Email    ")
+  else 
+   term.setBackgroundColor(colors.white)
+   term.setTextColor(colors.gray)
+   printCentered(9, "[4] Refresh Email    ")
+  end
+  if slc == 5 then
+   term.setBackgroundColor(colors.blue)
+   term.setTextColor(colors.lightGray)
+   printCentered(11, "[5] Exit             ")
+  else 
+   term.setBackgroundColor(colors.white)
+   term.setTextColor(colors.gray)
+   printCentered(11, "[5] Exit             ")
+  end
+  term.setBackgroundColor(colors.white)
+  term.setTextColor(colors.gray)
+end
+
+function printRight(height, value)
+  local xpos = w - string.len(value)
+  term.setCursorPos(xpos, height)
+  term.write(value)
+end
+
+function printCentered(height, value)
+  local xpos = w/2 - string.len(value)/2
+  term.setCursorPos(xpos, height)  
+  term.write(value)
+end
+
+-- Email Tools --
+
+function sendEmail()
+  rednet.open(side)
+  local newemail = "$EMAIL"..newto
+                 .."!SP!"..username
+                 .."!SP!"..os.time().."!SP!"
+                 ..newmsg
+  rednet.send(serverid, newemail)
+  if rednet.receive(5)~=nil then
+    confirmmsg = "MESSAGE SENT"
+  else
+    confirmmsg = "ERROR OCCURRED"
+  end
+end
+
+function readEmails()
+  rednet.open(side)
+  rednet.send(serverid, "$REQUEST"..username)
+  local id, mail = rednet.receive(5)
+  if mail==nil then
+    confirmmsg = "SERVER ERROR"
+    return
+  end
+  mail = string.gsub(mail, "$RESPONSE", "")
+
+  local t = split(mail, "!SP!")
+
+  for i=1,table.getn(t),3 do
+    table.insert(umail, {
+      from = t[i],
+      time = t[i+1],
+      body = t[i+2]
+    })
+  end
+end
+
+function readFromArchive()
+  if not fs.exists(shell.resolve(".").."/mail") then return end
+  local file = io.open(shell.resolve(".").."/mail", "r")
+  local fullstr = ""
+  local fline = file:read()
+  while fline do
+    fullstr=fullstr..fline
+    fline = file:read()
+  end  
+  file:close()
+  local t = split(fullstr, "!SP!")
+  for i=1,#t,3 do
+    table.insert(rmail, {
+      from = t[i],
+      time = t[i+1],
+      body = t[i+2]
+    })
+  end
+end
+
+function writeToArchive()
+  local file = io.open(shell.resolve(".").."/mail", "w")
+  local arcstr = ""
+  for i=1,#rmail do
+    arcstr=arcstr.."!SP!"..rmail[i].from.."!SP!"..
+                 rmail[i].time.."!SP!"..rmail[i].body
+  end
+  file:write(arcstr)
+  file:close()
+end
+
+-- Interface Logic --
+
+function runInterface()
+  term.clear()
+  while true do
+    if state==states["TOP"].id then
+      term.clear()
+      printHeader()
+      printTopMenu()
+      local e,key = os.pullEvent("key")
+      if key==200 and slc>1 then slc = slc-1
+      elseif key==208 and slc<5 then slc=slc+1
+      elseif key==28 then
+        if slc==1 then
+          state = states["COMPOSETEXT"].id
+          newmsg = ""
+        elseif slc==2 then
+          if table.getn(umail)==0 then
+            confirmmsg="No new mail."
+            state=states["CONFIRM"].id
+          else
+            emidx=1
+            emlist = umail
+            state=states["UNREAD"].id
+          end
+        elseif slc==3 then
+          if table.getn(rmail)==0 then
+            confirmmsg="Archive Empty."
+            state=states["CONFIRM"].id
+          else
+            emidx=1
+            emlist = rmail
+            state=states["ARCHIVE"].id
+          end
+        elseif slc==4 then
+          local ocount = table.getn(umail)
+          readEmails() 
+          if ocount < table.getn(umail) then
+            confirmmsg = "Messages Received!"
+          else
+            confirmmsg = "No new mail."
+          end
+          state = states["CONFIRM"].id
+        elseif slc==5 then
+          term.clear()
+          term.setCursorPos(1,1)
+          return
+        end
+      end
+    elseif state==states["COMPOSETEXT"].id then
+      term.clear()
+      printHeader()
+      printCompose()
+      term.setCursorPos(5, 4)
+      newto = io.read()
+      term.setCursorPos(1, 6)
+      local newmail=""
+      repeat
+        newmail = io.read().." \n"
+        newmsg=newmsg..newmail
+      until newmail==" \n"
+      state = states["COMPOSEMENU"].id
+    elseif state==states["COMPOSEMENU"].id then
+      printComposeMenu()
+      local e, key = os.pullEvent("key")
+      if key==203 and slc>1 then 
+        slc=slc-1
+      elseif key==205 and slc<2 then 
+        slc=slc+1
+      elseif key==28 then
+        if slc==1 then
+          sendEmail()
+          state = states["CONFIRM"].id
+        else 
+          state = states["TOP"].id
+        end
+      end
+    elseif state==states["ARCHIVE"].id then
+      term.clear()
+      printHeader()
+      printStored()
+      printArchiveMenu()
+      local e, key = os.pullEvent("key")
+      if key==203 and slc>1 then
+        slc=slc-1
+      elseif key==205 and slc<4 then
+        slc=slc+1
+      elseif key==28 then
+        if slc==1 and emidx>1 then emidx=emidx-1
+        elseif slc==2 then state=states["TOP"].id
+        elseif slc==3 then
+          table.remove(rmail, emidx)
+          writeToArchive()
+          if #rmail==0 then
+            confirmmsg= "Archive Empty."
+            state=states["CONFIRM"].id
+          end
+          if emidx>#rmail then emidx=#rmail end
+        elseif slc==4 and emidx<#rmail then
+          emidx=emidx+1
+        end
+      end
+    elseif state==states["UNREAD"].id then
+      term.clear()
+      printHeader()
+      printStored()
+      printUnreadMenu()
+      local e, key = os.pullEvent("key")
+      if key==203 and slc>1 then
+        slc=slc-1
+      elseif key==205 and slc<2 then
+        slc=slc+1
+      elseif key==28 then
+        if slc==1 then
+          table.insert(rmail, {
+            from = emlist[emidx].from,
+            time = emlist[emidx].time,
+            body = emlist[emidx].body 
+           })
+           writeToArchive()
+        end
+        table.remove(umail, emidx)
+        emlist = umail
+        if table.getn(umail)==0 then
+          confirmmsg="Inbox Empty."
+          state=states["CONFIRM"].id
+        end
+      end
+    elseif state==states["CONFIRM"].id then
+      printConfirm()
+      local e, key = os.pullEvent("key")
+      if key==28 then
+        state = states["TOP"].id
+      end
+    end
+  end
+end
+
+-- On Startup --
+
+function getPrefs()
+  local file = io.open("/etc/mail.conf")
+  if not file then
+    print("/etc/mail.conf file not found!")
+    return false
+  end
+  local sidl = file:read()
+  file:close()
+  sidl = string.gsub(sidl, "serverid=", "")
+  sidl = tonumber(sidl)
+  if sidl==0 then
+    print("Client settings not initialized- Please setup your /etc/mail.conf")
+    return false
+  end
+  serverid = sidl
+  return true
+end
+
+if not getPrefs() then return end
+readFromArchive()
+rednet.broadcast("Computer: "..os.getComputerID().." is now on network.")
+
+runInterface()

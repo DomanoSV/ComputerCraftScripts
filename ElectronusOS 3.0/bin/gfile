@@ -1,0 +1,107 @@
+serverId = 49
+local t = 1
+local sidesList = { "left", "right", "top", "bottom", "front", "back" }
+local modemExists = false
+
+function pressAnyKey()
+ while true do
+  event, param = os.pullEvent()
+  if event == "key" then
+   break
+  end
+ end
+ return param
+end
+
+function networkSend(id, s)
+ rednet.send(id, s)
+end
+
+function networkReceive(timeout)
+ var1, var2 = rednet.receive(timeout)
+ return var2
+end
+
+for i=1,6 do
+ if peripheral.isPresent(sidesList[i]) then
+  if peripheral.getType(sidesList[i]) == "modem" then
+   modemExists = true
+   t=i
+   break
+  end
+ end
+end
+
+if modemExists then
+ side = sidesList[t]
+else
+ term.clear()
+ term.setCursorPos(1,1)
+ print("Error 24: No modem connected.")
+ sleep(10)
+ shell.run("shell")
+end
+
+rednet.open(side)
+
+local x,y = term.getSize()
+
+local function centerText(text)
+ local x2,y2 = term.getCursorPos()
+ term.setCursorPos(math.ceil((x / 2) - (text:len() / 2)), y2)
+ print(text)
+end
+
+while true do
+ term.clear()
+ term.setCursorPos(1,1)
+ print("Welcome to Electronus gFile")
+ print("Version 1.0 Client")
+ sleep(1)
+ print("")
+ print("This program allows you to transfer files from")
+ print("the DKE gFile file transfer protocol server.")
+ print("")
+ print("  [1] Get File")
+ print("  [2] Upload File")
+ print("  [3] List Avaliable Files")
+ print("  [4] Exit gFile")
+ print("")
+ print("What would you like to do today?")
+ sleep(1)
+ term.setCursorPos(34,12)
+ selected = read()
+ term.clear()
+ term.setCursorPos(1,1)
+ if selected == "1" then
+  print("What file do you want to get?")
+  name = read()
+  print("Where do you want to save it?")
+  path = read()
+  networkSend(serverId, "720k07S4W2W4v32"..name)
+  data = networkReceive()
+  file = io.open(path, "w")
+  file:write(data)
+  file:close()
+  print("Success! file has been downloaded.")
+  sleep(0.5)
+ elseif selected == "2" then
+  print("What file would you like to upload?")
+  path = read()
+  print("What do you want the file to be named?")
+  name = read()
+  file = io.open(path, "r")
+  data = file:read("*a")
+  file:close()
+  networkSend(serverId, "dMroYWWuZzr4Ebb"..data)
+  networkSend(serverId, name)
+  print(networkReceive())
+ elseif selected == "3" then
+  networkSend(serverId, "4375IW5k3S6xTbt")
+  print(networkReceive())
+  print("Press any key to continue")
+  pressAnyKey()
+ elseif selected == "4" then
+  shell.run("shell")
+ end
+end
