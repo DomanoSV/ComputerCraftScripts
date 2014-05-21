@@ -1,0 +1,326 @@
+tArgs = {...}
+local modemSide,username,dir = tArgs[1],tArgs[2],tArgs[3]
+local slc = 1
+local page = 1
+local x,y = term.getSize()
+local center = math.ceil((x / 2) - (12 / 2))
+
+local function centerText(text, line)
+ local x2,y2 = term.getCursorPos()
+ term.setCursorPos(math.ceil((x / 2) - (text:len() / 2)), line)
+ term.write(text)
+end
+
+local function drawLogo()
+ term.setBackgroundColor(colors.white)
+ term.clear()
+ term.setCursorPos(1,1)
+ term.setBackgroundColor(colors.blue)
+ term.write(string.rep(" ", x))
+ term.setBackgroundColor(colors.white)
+ term.setCursorPos(center, 3)
+ term.setTextColor(colors.lime)
+ term.write("     _____")
+ term.setTextColor(colors.lightBlue)
+ term.write("__")
+ term.setCursorPos(center, 4)
+ term.setTextColor(colors.lime)
+ term.write("    / ___/")
+ term.setTextColor(colors.lightBlue)
+ term.write("_/")
+ term.setCursorPos(center, 5)
+ term.setTextColor(colors.lime)
+ term.write("   / /")
+ term.setTextColor(colors.lightBlue)
+ term.write("/__")
+ term.setCursorPos(center, 6)
+ term.setTextColor(colors.lime)
+ term.write("  / __/")
+ term.setTextColor(colors.lightBlue)
+ term.write("_/")
+ term.setCursorPos(center, 7)
+ term.setTextColor(colors.lime)
+ term.write(" / / __")
+ term.setTextColor(colors.lightBlue)
+ term.write("__")
+ term.setCursorPos((center + 4), 7)
+ term.write("/")
+ term.setCursorPos(center, 8)
+ term.setTextColor(colors.lime)
+ term.write("/_____/")
+ term.setTextColor(colors.lightBlue)
+ term.write("_/")
+ term.setTextColor(colors.yellow)
+ term.setCursorPos(center, 9)
+ term.write("ElectronusOS")
+ term.setTextColor(colors.gray)
+ term.setCursorPos((center), 10)
+ term.write("  Standard  ")
+ term.setCursorPos(1,19)
+ term.setBackgroundColor(colors.blue)
+ term.write(string.rep(" ", x))
+ term.setBackgroundColor(colors.white)
+ term.setCursorPos(1,11)
+end
+
+local timer
+
+timer = os.startTimer(0)
+while true do
+ term.setBackgroundColor(colors.white)
+ term.clear()
+ term.setCursorPos(1,1)
+ term.setBackgroundColor(colors.cyan)
+ term.setTextColor(colors.white)
+ term.write(string.rep(" ", x))
+ centerText("Welcome to ElectronusOS", 1)
+ term.setCursorPos(1,2)
+ term.setBackgroundColor(colors.blue)
+ term.setTextColor(colors.white)
+ term.write(string.rep(" ", x))
+ term.setCursorPos(1,2)
+ term.write(" Hello, "..username.."!")
+ local time = os.time()
+ timeFmt = textutils.formatTime(time, false)
+ timeLen = string.len(timeFmt)
+ term.setCursorPos(x-timeLen,2)
+ term.write(timeFmt)
+ term.setBackgroundColor(colors.white)
+ term.setTextColor(colors.gray)
+ centerText("Select Option:", 4)
+ if page == 1 then
+  if slc == 1 then
+   term.setBackgroundColor(colors.blue)
+   term.setTextColor(colors.lightGray)
+   centerText("[1] Applications  ", 6)
+  else 
+   term.setBackgroundColor(colors.white)
+   term.setTextColor(colors.gray)
+   centerText("[1] Applications  ", 6)
+  end
+  if slc == 2 then
+   term.setBackgroundColor(colors.blue)
+   term.setTextColor(colors.lightGray)
+   centerText("[2] Games         ", 7)
+  else 
+   term.setBackgroundColor(colors.white)
+   term.setTextColor(colors.gray)
+   centerText("[2] Games         ", 7)
+  end
+  if slc == 3 then
+   term.setBackgroundColor(colors.blue)
+   term.setTextColor(colors.lightGray)
+   centerText("[3] Email Client  ", 8)
+  else 
+   term.setBackgroundColor(colors.white)
+   term.setTextColor(colors.gray)
+   centerText("[3] Email Client  ", 8)
+  end
+  if slc == 4 then
+   term.setBackgroundColor(colors.blue)
+   term.setTextColor(colors.lightGray)
+   centerText("[4] File Manager  ", 9)
+  else 
+   term.setBackgroundColor(colors.white)
+   term.setTextColor(colors.gray)
+   centerText("[4] File Manager  ", 9)
+  end
+  if slc == 5 then
+   term.setBackgroundColor(colors.blue)
+   term.setTextColor(colors.lightGray)
+   centerText("[5] Open Terminal ", 10)
+  else 
+   term.setBackgroundColor(colors.white)
+   term.setTextColor(colors.gray)
+   centerText("[5] Open Terminal ", 10)
+  end
+  if slc == 6 then
+   term.setBackgroundColor(colors.blue)
+   term.setTextColor(colors.lightGray)
+   centerText("[6] Logout        ", 12)
+  else 
+   term.setBackgroundColor(colors.white)
+   term.setTextColor(colors.gray)
+   centerText("[6] Logout        ", 12)
+  end
+  if slc == 7 then
+   term.setBackgroundColor(colors.blue)
+   term.setTextColor(colors.lightGray)
+   centerText("[7] Restart       ", 13)
+  else 
+   term.setBackgroundColor(colors.white)
+   term.setTextColor(colors.gray)
+   centerText("[7] Restart       ", 13)
+  end
+  if slc == 8 then
+   term.setBackgroundColor(colors.blue)
+   term.setTextColor(colors.lightGray)
+   centerText("[8] Shutdown      ", 14)
+  else 
+   term.setBackgroundColor(colors.white)
+   term.setTextColor(colors.gray)
+   centerText("[8] Shutdown      ", 14)
+  end
+ elseif page == 2 then
+  if slc == 1 then
+   term.setBackgroundColor(colors.blue)
+   term.setTextColor(colors.lightGray)
+   centerText("[1] Paint         ", 6)
+  else 
+   term.setBackgroundColor(colors.white)
+   term.setTextColor(colors.gray)
+   centerText("[1] Paint         ", 6)
+  end
+  if slc == 2 then
+   term.setBackgroundColor(colors.blue)
+   term.setTextColor(colors.lightGray)
+   centerText("[2] Back          ", 8)
+  else 
+   term.setBackgroundColor(colors.white)
+   term.setTextColor(colors.gray)
+   centerText("[2] Back          ", 8)
+  end
+ elseif page == 3 then
+  if slc == 1 then
+   term.setBackgroundColor(colors.blue)
+   term.setTextColor(colors.lightGray)
+   centerText("[1] Worm          ", 6)
+  else 
+   term.setBackgroundColor(colors.white)
+   term.setTextColor(colors.gray)
+   centerText("[1] Worm          ", 6)
+  end
+  if slc == 2 then
+   term.setBackgroundColor(colors.blue)
+   term.setTextColor(colors.lightGray)
+   centerText("[2] Adventure     ", 7)
+  else 
+   term.setBackgroundColor(colors.white)
+   term.setTextColor(colors.gray)
+   centerText("[2] Adventure     ", 7)
+  end
+  if slc == 3 then
+   term.setBackgroundColor(colors.blue)
+   term.setTextColor(colors.lightGray)
+   centerText("[3] Back          ", 9)
+  else 
+   term.setBackgroundColor(colors.white)
+   term.setTextColor(colors.gray)
+   centerText("[3] Back          ", 9)
+  end
+ end
+ term.setCursorPos(1,18)
+ term.setBackgroundColor(colors.white)
+ term.setTextColor(colors.gray)
+
+    if fs.exists(dir) and fs.isDir(dir) then
+    else
+     fs.makeDir(dir)
+    end
+
+   print("Documents: "..dir)
+   shell.run("cd", dir)
+
+ term.setCursorPos(1,19)
+ term.setBackgroundColor(colors.yellow)
+ term.setTextColor(colors.cyan)
+ term.write(string.rep(" ", x))
+ centerText("UP/ DOWN - Pick, ENTER - Select", 19)
+ term.setBackgroundColor(colors.white)
+ term.setTextColor(colors.gray)
+ term.setCursorPos(1,16)
+ local event, p1, p2 = os.pullEvent()
+ if event == "key" then 
+  if page == 1 then
+   if p1 == keys.up and slc > 1 then slc=slc-1
+   elseif p1 == keys.down and slc < 8 then slc=slc+1
+   elseif p1 == keys.enter or p1 == keys.space then
+    if slc == 1 then
+     page = 2
+     slc = 1
+    elseif slc == 2 then
+     page = 3
+     slc = 1
+    elseif slc == 3 then
+     shell.run("/bin/mailclient", modemSide, username)
+     timer = os.startTimer(0.1)
+    elseif slc == 4 then
+     shell.run("/bin/filemanager", username, dir)
+     timer = os.startTimer(0.1)
+     shell.run("cd", dir)
+    elseif slc == 5 then
+     term.setBackgroundColor(colors.black)
+     term.clear()
+     term.setCursorPos(1,1)
+     term.setBackgroundColor(colors.blue)
+     term.setTextColor(colors.white)
+     print("Welcome to Terminal for ElectronusOS                                   ")
+     print("To return type: exit                                                   ")
+     term.setBackgroundColor(colors.black)
+     shell.run("shell")
+     timer = os.startTimer(0.1)
+    elseif slc == 6 then
+     drawLogo()
+     centerText("You are being logged out, please wait...", 12)
+     shell.run("cd", "/")
+     sleep(2)
+     exit()
+    elseif slc == 7 then
+     drawLogo()
+     centerText("ElectronusOS is restarting, please wait...", 12)
+     sleep(2)
+     os.reboot()
+    elseif slc == 8 then
+     drawLogo()
+     centerText("ElectronusOS is shutting down, please wait...", 12)
+     sleep(2)
+     os.shutdown()
+    else
+     print("Unknown command!")
+     sleep(2)
+    end
+   end
+  elseif page == 2 then
+   if p1 == keys.up and slc > 1 then slc=slc-1
+   elseif p1 == keys.down and slc < 2 then slc=slc+1
+   elseif p1 == keys.enter or p1 == keys.space then
+    if slc == 1 then
+     term.write("Name new paint file: ")
+     local input = read()
+     term.setBackgroundColor(colors.black)
+     shell.run("paint", input..".bmp")
+     timer = os.startTimer(0.1)
+    elseif slc == 2 then
+     page = 1
+     slc = 1
+    end
+   end
+  elseif page == 3 then
+   if p1 == keys.up and slc > 1 then slc=slc-1
+   elseif p1 == keys.down and slc < 3 then slc=slc+1
+   elseif p1 == keys.enter or p1 == keys.space then
+    if slc == 1 then
+     term.setBackgroundColor(colors.black)
+     term.setTextColor(colors.white)
+     shell.run("worm")
+     timer = os.startTimer(0.1)
+    elseif slc == 2 then
+     term.setBackgroundColor(colors.black)
+     term.setTextColor(colors.white)
+     term.clear()
+     term.setCursorPos(1,1)
+     shell.run("adventure")
+     timer = os.startTimer(0.1)
+    elseif slc == 3 then
+     page = 1
+     slc = 1
+    end
+   end
+  end
+ end
+ if event == "timer" and p1 == timer then
+
+  timer = os.startTimer(0.1)
+
+ end
+end
