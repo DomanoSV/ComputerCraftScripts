@@ -1,4 +1,5 @@
--- MailClient, developed by NitrogenFingers and DomanoSV to work with ElectronusOS --
+-- MailClient, developed by NitrogenFingers --
+-- Modified by DomanoSV to work with ElectronusOS --
 -- Variables --
 tArgs = {...}
 local modemSide,username = tArgs[1],tArgs[2]
