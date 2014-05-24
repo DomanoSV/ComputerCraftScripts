@@ -1,0 +1,9 @@
+-- ElectronousOS Core Library of Functions --
+-- Developed by DomanoSV and Spook811 --
+
+-- Print Centred Text --
+function centerText(text, line)
+ x,y = term.getSize()
+ term.setCursorPos(math.ceil((x / 2) - (text:len() / 2)), line)
+ term.write(text)
+end

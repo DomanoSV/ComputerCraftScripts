@@ -1,0 +1,31 @@
+tArgs = {...}
+-- Boot Loader v1.0 Beta -- 
+-- Developed by DomanoSV and Spook811 --
+-- Copyright DKE Domain 2014 - 2015 --
+
+-- Load in API --
+os.loadAPI(shell.resolve(".").."/lib/libcore")
+
+-- Local Variables --
+local x,y = term.getSize()
+local slc = 1
+
+-- Local Functions --
+local function getBootOptions()
+
+end
+
+-- Program --
+while true do
+
+	local event, p1, p2 = os.pullEvent()
+	if event == "key" then 
+		if p1 == keys.up and slc > 1 then slc=slc-1
+		elseif p1 == keys.down and slc < 8 then slc=slc+1
+		elseif p1 == keys.enter or p1 == keys.space then
+			if slc == 1 then
+			page = 2
+
+		end
+	end
+end

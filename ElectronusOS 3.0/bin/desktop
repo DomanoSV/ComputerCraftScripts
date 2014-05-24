@@ -1,0 +1,113 @@
+-- Electronus OS 3.0 Desktop Enviroment --
+-- Copyright DKE Domain 2014 - 2015 --
+
+-- User Settings --
+
+tArgs = {...}
+user = tArgs[1]
+bgImageFile = "dke2"
+colorB = colors.black	-- Tool Bar Color --
+colorT = colors.cyan	-- Text Color	--
+colorH = colors.white	-- Highlighted Text Color --
+
+-- Startup --
+x, y = term.getSize()
+ip = os.getComputerID()
+
+timeLen = 5
+userLen = string.len(user)
+ipLen = string.len(ip)
+uml = x-timeLen-userLen-1
+
+-- Tables --
+
+
+local userMenu = {
+	[1] = {text = "Log Off"},
+	[2] = {text = "Shutdown"},
+	[3] = {text = "Reboot"} 
+}
+
+local buttons = {}
+
+-- Functions --
+
+function bgImage()
+	local bgImage = paintutils.loadImage(bgImageFile)
+	paintutils.drawImage(bgImage, 0, 2)
+end
+
+function getTime()
+ENTime = "00:00"
+ENTime = http.get("http://www.dkedomain.com/srvtime.php")
+ENTime = ENTime.readAll()
+write(ENTime)
+end
+
+function toolBar()
+	paintutils.drawLine(0, 1, 51, 1, colorB)
+	term.setTextColor(colorT)
+	
+	term.setCursorPos(2,1)
+	write("E")
+	term.setCursorPos(x-timeLen, 1)
+	write("00:00")
+	term.setCursorPos(x-timeLen-userLen-1, 1)
+	write(user.." ")
+	term.setCursorPos(x-timeLen-userLen-ipLen-3, 1)
+	write("#"..ip.." ")
+end
+
+function userMenuDraw()
+	term.setTextColor(colorH)
+	term.setCursorPos(x-timeLen-userLen-1, 1)
+	write(user.." ") 
+	term.setTextColor(colorT)
+	
+	a = uml
+	paintutils.drawLine(a, 2, a+9, 2, colorB)
+	paintutils.drawLine(a, 3, a+9, 3, colorB)
+	paintutils.drawLine(a, 4, a+9, 4, colorB)
+	paintutils.drawLine(a, 5, a+9, 5, colorB)
+	paintutils.drawLine(a, 6, a+9, 6, colorB)
+	paintutils.drawLine(a, 7, a+9, 7, colorB)
+	
+	term.setCursorPos(a+1,3)
+	print(userMenu[1].text)
+	term.setCursorPos(a+1,5)
+	print(userMenu[2].text)
+	term.setCursorPos(a+1,7)
+	print(userMenu[3].text)
+end
+
+function click(e,p,x2,y2)
+	term.setCursorPos(1, 19)
+	write(e.." "..p.." "..x2.." "..y2)
+end
+
+-- Program --
+
+local timer
+timer = os.startTimer(0)
+term.clear()
+term.setCursorPos(0, 0)
+
+
+while true do
+	local event, p1, p2, p3 = os.pullEvent()
+ bgImage()
+ toolBar()
+ if event == "mouse_click" then
+ 	if p1 == 2 then
+	 	click(event, p1, p2, p3) 
+ 	else
+		 if p2 >= uml and p2 <= uml+userLen and p3 == 1 then
+    userMenuDraw()
+   end
+	 end
+ end
+	
+	if event == "timer" and p1 == timer then
+		timer = os.startTimer(30)
+	end
+end

@@ -1,0 +1,136 @@
+-- TMITTY v1.2 --
+-- Copyright DKE Domain 2014-2015 --
+-- Developed by Spook811 --
+
+-- Start up --
+sysName = "DKE TechWorld DataCenter Server #1"
+ip = os.getComputerID()
+time = textutils.formatTime(os.time(), false)
+date = os.day()
+mon = peripheral.wrap("monitor_0")
+
+-- Functions --
+
+function openRednet()
+	for k,v in pairs(rs.getSides()) do
+		if peripheral.getType(v) == "modem" and peripheral.call(v, "isWireless") then
+			rednet.open(v)
+			return
+		end
+	end
+end
+
+function split(str, pat)
+	local t = { }
+	local fpat = "(.-)"..pat
+	local last_end = 1
+	local s, e, cap = str:find(fpat, 1)
+	while s do
+		if s ~= 1 or cap ~= "" then
+			table.insert(t,cap)
+		end
+		last_end = e+1
+		s, e, cap = str:find(fpat, last_end)
+	end
+	if last_end <= #str then
+		cap = str:sub(last_end)
+		table.insert(t, cap)
+	end
+	return t
+end
+
+function header()
+	local term = mon
+	term.setCursorPos(1,1)
+	term.setBackgroundColour(colors.blue)
+	term.write("                                                                                   ")
+	term.setCursorPos(1,1)
+	term.write(sysName)
+	term.setTextColor(colors.lightGray)
+	term.setCursorPos(1,2)
+	term.write("TMITTY v1.2 Breaking new boundaries                                                ")
+	term.setCursorPos(1,3)
+	term.write("Copyright DKE Domain 2014-2015                                                     ")
+	term.setCursorPos(75,2)
+	term.write("IP: "..ip)
+
+	term.setBackgroundColor(colors.black)
+	term.setCursorPos(1,32)
+	term.setTextColor(colors.white)
+	statusLightActivity()
+end
+
+function computerOverlay()
+	term.setBackgroundColour(colors.blue)
+    term.clear()
+	term.setCursorPos(1,5)
+	print("                    ___________")
+	print("                   |____   ____|")
+	print("                        | |")
+	print("                        | |")
+	print("                        | |")
+	print("                        | |")
+	print("                        | |")
+	print("                        |_|")
+	print("")
+	print("        TMITTY v1.2 Breaking new boundaries        ")
+	term.setTextColor(colours.lightGrey)
+	print("           Copyright DKE Domain 2014-2015          ")
+end
+
+function statusLightWaiting()
+	mon.setBackgroundColour(colors.gray)
+	mon.setCursorPos(73,2)
+	mon.write(" ")
+	mon.setBackgroundColor(colors.black)
+	mon.setCursorPos(1,32)
+	mon.setTextColor(colors.white)
+end
+
+function statusLightActivity()
+	mon.setBackgroundColour(colors.lime)
+	mon.setCursorPos(73,2)
+	mon.write(" ")
+	mon.setBackgroundColor(colors.black)
+	mon.setCursorPos(1,32)
+	mon.setTextColor(colors.white)
+end
+
+function printStamp()
+	mon.setCursorPos(1,32)
+	mon.setTextColor(colors.blue)
+	mon.write("-----------------------------------------------------------------------------------")
+	mon.setTextColor(colors.white)
+	header()
+end
+
+function receiveStamp()
+	statusLightActivity()
+	mon.write(time.." | Day "..date)
+	mon.write("Receiving data...")
+	header()
+end
+
+-- Program --
+computerOverlay()
+header()
+openRednet()
+
+while true do
+	printStamp()
+	statusLightWaiting()
+	
+	id, message = rednet.receive()
+	receiveStamp()
+	ipString = split(message, "//")
+	sTo = tonumber(ipString[1])
+	packets = id.."//"..ipString[2]
+	mon.write("Data received from "..id..", sending to: ", sTo)
+	header()
+	
+	rednet.send(sTo, packets)
+	mon.setTextColor(colors.green)
+	mon.write("Data sent!")
+	header()
+	mon.setTextColor(colors.white)
+end

@@ -1,0 +1,70 @@
+modem = "bottom"
+rednet.open(modem)
+fLoop = true
+
+ip = os.getComputerID()
+time = textutils.formatTime(os.time(), false)
+date = os.day()
+
+function header()
+	term.setCursorPos(1,1)
+	term.setBackgroundColour(colors.blue)
+	print("DATA CENTER #1                                     ")
+	term.setTextColor(colors.lightGray)
+	print("TMITTY Alpha v1.1 Breaking new boundaries                ")
+	print("Copyright DKE Domain 2014-2015                     ")
+	term.setCursorPos(47,2)
+	print("IP: ", ip)
+
+	term.setBackgroundColor(colors.black)
+	term.setCursorPos(1,19)
+	term.setTextColor(colors.white)
+	statusLightActivity()
+end
+
+function statusLightWaiting()
+	term.setBackgroundColour(colors.red)
+	term.setCursorPos(44,2)
+	print(" ")
+	term.setBackgroundColor(colors.black)
+	term.setCursorPos(1,19)
+	term.setTextColor(colors.white)
+end
+
+function statusLightActivity()
+	term.setBackgroundColour(colors.lime)
+	term.setCursorPos(44,2)
+	print(" ")
+	term.setBackgroundColor(colors.black)
+	term.setCursorPos(1,19)
+	term.setTextColor(colors.white)
+end
+
+function printStamp()
+	term.setTextColor(colors.blue)
+	print("---------------------------------------------------")
+	term.setTextColor(colors.white)
+end
+
+header()
+
+while true do
+	printStamp()
+	header()
+	statusLightWaiting()
+	
+	id, message = rednet.receive()
+	statusLightActivity()
+	header()
+	print(time.." | Day "..date)
+	print("Receiving data...")
+	header()
+	sTo = string.sub(message, 1, 3)
+	packets = message
+	print("Data received from "..id..", sending to: ", sTo)
+	rednet.send(05, packets)
+	term.setTextColor(colors.green)
+	print("Data sent!")
+	header()
+	term.setTextColor(colors.white)
+end
