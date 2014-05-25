@@ -1,9 +1,31 @@
 -- ElectronousOS Core Library of Functions --
 -- Developed by DomanoSV and Spook811 --
+-- Copyright DKE Domain 2014 - 2015 --
 
 -- Print Centred Text --
 function centerText(text, line)
  x,y = term.getSize()
  term.setCursorPos(math.ceil((x / 2) - (text:len() / 2)), line)
  term.write(text)
+end
+
+-- Split String Function --
+
+function split(str, pattern)
+  local t = { }
+  local fpat = "(.-)" .. pattern
+  local last_end = 1
+  local s, e, cap = str:find(fpat, 1)
+  while s do
+    if s ~= 1 or cap ~= "" then
+      table.insert(t,cap)
+    end
+    last_end = e+1
+    s, e, cap = str:find(fpat, last_end)
+  end
+  if last_end <= #str then
+    cap = str:sub(last_end)
+    table.insert(t, cap)
+  end
+  return t
 end
