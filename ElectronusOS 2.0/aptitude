@@ -27,7 +27,7 @@ local function putFile(sFile)
 		"api_option=paste&"..
 		"api_dev_key="..key.."&"..
 		"api_paste_format=lua&"..
-		"api_paste_expire_date=10M&"..
+		"api_paste_expire_date=N&"..
 		"api_paste_name="..textutils.urlEncode(sName).."&"..
 		"api_paste_code="..textutils.urlEncode(sText)
 		)
@@ -43,7 +43,7 @@ local function putFile(sFile)
 		print(string.len(sText).." bytes")
 		print( " " )
 		print( "Upload Complete." )
-	    print( "Uploaded as "..sResponse )
+	        print( "Uploaded as "..sResponse )
 		print( "Run \"aptitude install "..sCode.."\" to install." )
 	    
 	else
