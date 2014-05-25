@@ -16,17 +16,16 @@ os.loadAPI("/lib/libcore")
 local function readBootOptions()
  if not fs.exists("/boot/initrd") then return end
  local file = io.open("/boot/initrd", "r")
-   print("1")
+ c = 0
  for line in file:lines()do
-  print(line)
+  c = c + 1
   local t = libcore.split(line, ";")
-  print("2")
   table.insert(bootOpt, { 
 	name = t[1],
 	dir = t[2],
 	args = t[3] })
+  if c == 8 then break end  
  end
-   print("3")
  file:close()
 end
 
