@@ -24,7 +24,13 @@ local function readBootOptions()
 	name = t[1],
 	dir = t[2],
 	args = t[3] })
-  if c == 8 then break end  
+  if c == 7 then break end  
+ end
+ if tArgs[2] ~= null then
+	table.insert(bootOpt, { 
+	name = "Bootable Disk",
+	dir = tArgs[2],
+	args = ""})
  end
  file:close()
 end
