@@ -1,162 +1,945 @@
--- ElectronusBIOS v2.0 -- 
--- Developed by DomanoSV and Spook811 --
--- Copyright DKE Domain 2014 - 2015 --
-
--- Local Variables --
-tArgs = {...}
-local x,y = term.getSize()
-
--- Load in API --
-os.loadAPI("/lib/libcore")
-
--- Local Functions --
-
-
--- Program --
-term.clear()
-term.setCursorPos(1,1)
-term.setBackgroundColor(colors.black)
-logo1 = { "_______", "/ ___/_/", "/ //__   ", "/ __/_/   ", "/ //____   ", "/_____/_/   ")
-logo2 = ("__", "_/", "/__", "_/", "/", "__", "_/"}
-logostr1 = "ElectronusOS"
-logostr2 = "BIOSv1.0  "
-logoHeight = table.getn(logo1)
-for i=1,logoHeight do
-	local w = (string.len(logo1[i]) + string.len(logo2[i]))
-	term.setCursorPos((x-w), i)
-	term.setTextColor(colors.lime)
-	write(logo1[i])
-	term.setTextColor(colors.lightBlue)
-	write(logo2[i])
+-- ########################## -- Funktionen -- ############################ -- 
+local function s(...) return sleep(...) end
+local function w(...) return write(...) end
+local function p(...) return print(...) end
+local function tw(...) return term.write(...) end
+local function scp(...) return term.setCursorPos(...) end
+local function sbc(...) return term.setBackgroundColor(...) end
+local function stc(...) return term.setTextColor(...) end
+local function tc(...) return term.clear(...) end
+local function tcl(...) return term.clearLine() end
+local function scb(...) return term.setCursorBlink(...) end
+local function ts(...) return term.scroll(...) end
+local function r(...) return shell.run(...) end
+local function para(...) return parallel.waitForAny(...) end
+local function sw(...) return textutils.slowWrite(...) end
+local function sp(...) return textutils.slowPrint(...) end
+-- ########################## -- Einstellungen -- ############################ -- 
+os.pullEvent = os.pullEventRaw
+OfficialVersion = "2.8"
+loopbreak2 = 0
+sbc(32768)
+stc(1)
+if not fs.exists("LabyOS/Programme") then
+fs.delete("LabyOS")
 end
-term.setCursorPos((x - string.len(logostr1)), (logoHeight + 1))
-term.setTextColor(colors.yellow)
-write(logostr1)
-term.setCursorPos((x - string.len(logostr2)), (logoHeight + 2))
-term.setTextColor(colors.white)
-write(logostr1)
-
-term.setTextColor(colors.white)
-term.setCursorPos(1,1)
-term.write("ElectronusBIOS v1.0 Release 1.0")
-term.setCursorPos(1,2)
-term.write("Copyright 2012-2015 DKE Domain")
-sleep(1)
-term.setCursorPos(1,4)
-term.write("BlazeCore II Processor 2.0GHz")
-sleep(1)
-term.setCursorPos(1,5)
-term.write("4096MB System RAM")
-term.setCursorPos(19,5)
-textutils.slowPrint("...",3)
-term.setCursorPos(23,5)
-term.write("Passed")
-term.setCursorPos(1, 7)
-term.write("Physical Drives")
-term.setCursorPos(1,8)
-term.write("---------------")
-
-local sidesList = { "left", "right", "top", "bottom", "front", "back"}
-local driveCount = 1
-local modemExists = false
-local modemSide = "right"
-local bootDrive = "right"
-local bootDriveExists = false
-local mountName = disk
-noDiskBoot = false
-systemOS = "/authx"
-runShell = "/authx"
-
-for i = 1,6 do
- sleep(0.5)
- if peripheral.isPresent(sidesList[i]) then
-  if peripheral.getType(sidesList[i]) == "modem" then
-   modemExists = true
-   modemSide = sidesList[i]
-  elseif  peripheral.getType(sidesList[i]) == "drive" then
-   mountName = "[EMPTY]"
-   if disk.isPresent(sidesList[i]) then
-    mountName = disk.getMountPath(sidesList[i])
-   end
-   if driveCount > 1 then
-    term.setCursorPos(1,(6+driveCount))
-    term.write("Disk Drive: "..mountName.." - Connected ("..sidesList[i]..")")
-   else 
-    term.setCursorPos(1,(8+driveCount))
-    term.write("Bootable Disk Drive: "..mountName.." - Connected ("..sidesList[i]..")")
-    bootDrive = sidesList[i]
-    bootDriveExists = true
-   end
-   driveCount = driveCount + 1
+-- ########################## -- Terminate Screen -- ############################ -- 
+function terminate()	
+ while true do
+  local events = os.pullEventRaw()
+   if events == "terminate" then
+os.reboot()
   end
  end
 end
-
-sleep(1)
-if modemExists then
- term.setCursorPos(1,17)
- clientId = os.computerID()
- print("Modem connected ("..modemSide.."). IP: ", clientId)
-else
- term.setCursorPos(1,17)
- print("Warning! No modem connected.")
-end
-
-sleep(1)
-term.setCursorPos(1,18)
-print("Booting [                                        ]")
-term.setCursorPos(9,18)
-textutils.slowPrint("[########################################]", 35)
-
-term.clear()
-term.setCursorPos(1,1)
-
-if bootDriveExists then
- if disk.isPresent(bootDrive) then
-  mountName = disk.getMountPath(bootDrive)
-  print("Disk ("..mountName..") found in boot drive...")
-  sleep(1)
-  if disk.hasData(bootDrive) then 
-   if fs.exists("/"..mountName.."/autoexec") then
-    if fs.isDir("/"..mountName.."/autoexec") then
-     print("Disk is not a bootable disk...")
-     noDiskBoot = true
-     sleep(1)
-    else
-     print("Attempting to boot from "..mountName.." ...")
-     noDiskBoot = false
-     sleep(1)
-     runShell = "/"..mountName.."/autoexec"
-    end
-   else
-    print("Disk is not a bootable disk...")
-    noDiskBoot = true
-    sleep(1)
-   end 
-  else
-   print("Disk is not a bootable disk...") 
-   noDiskBoot = true
-   sleep(1)
+-- ########################## -- Change startup (BACKUP) -- ############################ -- 
+function runDesktop1()
+ if fs.exists("startup") then
+   fs.makeDir("LabyOS/Backup")
+  if fs.exists("LabyOS/Backup/startup") then
+   fs.delete("LabyOS/Backup/startup")
   end
- end
-end
-
-if runShell == "/authx" then
- if fs.exists(systemOS) then
-  if fs.isDir(systemOS) then
-   print("Unable to boot OS, has it been installed?")
-   sleep(5)
-   shell.exit()
-  else
-   print("Attempting to boot OS ...")
-   sleep(1)
-   runShell = systemOS
+   fs.copy("startup", "LabyOS/Backup/startup")
+  if fs.exists("LabyOS/Programme/Setup") then
+   fs.delete("startup")
+   fs.copy("LabyOS/Programme/Setup", "startup")
+   os.reboot()
   end
  else
-  print("Unable to boot OS, has it been installed?")
-  sleep(5)
-  shell.exit()
+ r("clear")
+ error("startup is not exists")
  end
 end
+-- ########################## -- Run Login Screen -- ############################ -- 
+function LabyOSUpdateLogin1()
+function loadscreen1()
+image = paintutils.loadImage("LabyOS/Texture/Login")
+paintutils.drawImage(image, 1, 1)
+-- ## Test Update ## -- 
+sbc(32768)
+scp(30,1)
+stc(1)
+sbc(2048)
+stc(16)
+w([[:]])
+scp(30,2)
+p([[:]])
+scp(31,1)
+r("LabyOS/Config/LabyOSUpdate")
+-- ################# --
+-- ############ create Accounts ############
+        fs.makeDir("LabyOS/Profile")
+if not fs.exists("LabyOS/Profile/User1") then
+        createAcc1 = fs.open("LabyOS/Profile/User1", "w")
+        createAcc1.write("Guest\n")
+		createAcc1.write("no password")
+        createAcc1.close()
+end
+if not fs.exists("LabyOS/Profile/User2") then
+        createAcc2 = fs.open("LabyOS/Profile/User2", "w")
+        createAcc2.write("Free slot\n")
+		createAcc2.write("no password")
+        createAcc2.close()
+end
+if not fs.exists("LabyOS/Profile/User3") then
+        createAcc3 = fs.open("LabyOS/Profile/User3", "w")
+        createAcc3.write("Free slot\n")
+		createAcc3.write("no password")
+        createAcc3.close()
+end 
+-- ## Run Interface ## -- 
+sbc(2048)
+stc(1)
+scp(1,1)
+w([[LabyOS]])
+scp(1,2)
+w([[Windows XP Version]])
+scp(3,9)
+sbc(8)
+w([[Welcome]])
+scp(15,3)
+w([[:]])
+scp(15,4)
+w([[:]])
+scp(15,5)
+w([[:]])
+scp(15,6)
+w([[:]])
+scp(15,7)
+w([[:]])
+scp(15,8)
+w([[:]])
+scp(15,9)
+w([[:]])
+scp(15,10)
+w([[:]])
+scp(15,11)
+w([[:]])
+scp(15,12)
+w([[:]])
+scp(15,13)
+w([[:]])
+scp(15,14)
+w([[:]])
+scp(15,15)
+w([[:]])
+scp(15,16)
+w([[:]])
+sbc(2048)
+scp(4,18)
+w([[Turn off computer]])
+sbc(2)
+scp(2,18)
+w([[Q]])
+sbc(256)
+-- ## Profil Box ## -- 
+------------### 1 ####
+scp(17,5)
+w([[1   ]])
+scp(17,6)
+w([[    ]])
+------------### 2 ####
+scp(17,9)
+w([[2   ]])
+scp(17,10)
+w([[    ]])
+------------### 3 ####
+scp(17,13)
+w([[3   ]])
+scp(17,14)
+w([[    ]])
+-- ################ -- 
+-- ## Profil Names ## -- 
+------------### 1 ####
+sbc(8)
+scp(22,5)
+w([[1]])
+stc(16384)
+scp(22,6)
+w([[-#-]])
+------------### 2 ####
+stc(1)
+sbc(8)
+scp(22,9)
+w([[2]])
+stc(16384)
+scp(22,10)
+w([[-#-]])
+------------### 3 ####
+stc(1)
+sbc(8)
+scp(22,13)
+w([[3]])
+stc(16384)
+scp(22,14)
+w([[-#-]])
+-- ################ Print name data ################
+logincheck = fs.open("LabyOS/Profile/User1", "r")
+         if logincheck then
+          username1 = logincheck.readLine()
+		  userpass1 = logincheck.readLine()
+         end
+          logincheck.close()
+		   scp(22,5)
+		   stc(1)
+		   w(username1)
+		   stc(32)
+		   if userpass1 == "no password" then
+           scp(22,6)
+		   w([[No password]])
+		   else
+		   scp(22,6)
+		   stc(16384)
+		   w([[Password     ]])
+		   end
+		   if username1 == "Free slot" then
+		    stc(16)
+	        scp(22,6)
+	        w([[Unavailable!        ]])
+		   end
+logincheck = fs.open("LabyOS/Profile/User2", "r")
+         if logincheck then
+          username2 = logincheck.readLine()
+		  userpass2 = logincheck.readLine()
+         end
+          logincheck.close()
+		   scp(22,9)
+		   stc(1)
+		   w(username2)
+		   stc(32)
+		   if userpass2 == "no password" then
+           scp(22,10)
+		   w([[No password]])
+		   else
+		   scp(22,10)
+		   stc(16384)
+		   w([[Password     ]])
+		   end
+		   if username2 == "Free slot" then
+		    stc(16)
+	        scp(22,10)
+	        w([[Unavailable!        ]])
+		   end
+logincheck = fs.open("LabyOS/Profile/User3", "r")
+         if logincheck then
+          username3 = logincheck.readLine()
+		  userpass3 = logincheck.readLine()
+         end
+          logincheck.close()
+		   scp(22,13)
+		   stc(1)
+		   w(username3)
+		   stc(32)
+		   if userpass3 == "no password" then
+           scp(22,14)
+		   w([[No password]])
+		   else
+		   stc(16384)
+		   scp(22,14)
+		   w([[Password     ]])
+		   end
+		   if username3 == "Free slot" then
+		    stc(16)
+	        scp(22,14)
+	        w([[Unavailable!        ]])
+		   end
+-- #################################################
+end
+loadscreen1()
+-- ################### -- 
+-- ##### Mouse click / shutdown / window ##### --
+function drag()
+breakloop1a = 0
+-- ########### Window design off ##############
+      X = 25
+      Y = 6
+   	  sbc(8)
+      scp(X-8,Y)
+      sbc(2048)
+	  stc(1)
+      w([[Info            ]])
+      sbc(16384)
+      w([[X]])
+      sbc(256)
+	  stc(32768)
+      scp(X-8,Y+1)
+      p([[    Shutdown?    ]])
+      scp(X-8,Y+2)
+      p([[                 ]])
+      scp(X-8,Y+3)
+      p([[   [Y]    [N]    ]])
+      scp(X-8,Y+4)
+	  stc(16384)
+      p([[                %]])
+-- ########################################
+ while true do
+   function breakloop1()
+   breakloop1a = 1
+   end
+     event, button, X, Y = os.pullEvent("mouse_drag")
+	 XY = X..","..Y
+   if button == 1 and breakloop1a == 0 then
+-- ########### Window design on ##############
+	  loadscreen1()
+      scp(X-8,Y)
+      sbc(2048)
+	  stc(1)
+      w([[Info            ]])
+      sbc(16384)
+      w([[X]])
+      sbc(256)
+	  stc(32768)
+      scp(X-8,Y+1)
+      p([[    Shutdown?    ]])
+      scp(X-8,Y+2)
+      p([[                 ]])
+      scp(X-8,Y+3)
+      p([[   [Y]    [N]    ]])
+      scp(X-8,Y+4)
+	  stc(16384)
+      p([[                %]])
+-- ########################################
+   end
+   
+   if breakloop1a == 1 then
+   break
+   end
+  end
+ end
+-- ########### Window: Close ##############
+function click()
+for clicks=0,2 do
+   event, button, X2, Y2 = os.pullEvent("mouse_click")
+   XY2 = X2..","..Y2
+-- ######## Window: No moved function #########
+   if XY2 == "33,6" then
+     breakloop1()
+     para(terminate, LabyOSUpdateLogin1)
+    end
+   ----------------------
+   if XY2 == "28,9" then
+     breakloop1()
+     para(terminate, LabyOSUpdateLogin1)
+   end
+   ----------------------
+   if XY2 == "21,9" then
+     breakloop1()
+     loadscreen1()
+     s(1)
+     sbc(2048)
+     scp(1,1)
+     w([[                                                   ]])
+     scp(1,2)
+     s(0,1)
+     w([[                                                   ]])
+     scp(2,18)
+     s(0,1)
+     w([[                                                   ]])
+     sbc(8)
+     s(1)
+     r("clear")
+     stc(1)
+	 for shutdown1=0,1 do
+		scp(20,9)
+		w([[: Shutdown]])
+		s(0.1)
+		scp(20,9)
+		w([[/ Shutdown]])
+		s(0.1)
+		scp(20,9)
+		w([[- Shutdown]])
+		s(0.1)
+		scp(20,9)
+		w([[\ Shutdown]])
+		s(0.1)
+     end
+	 os.shutdown()
+end
+end
+-- #####################################
+  while true do
+     event, button, X, Y = os.pullEvent("mouse_drag")
+     XY = X..","..Y
+	 event, button, X2, Y2 = os.pullEvent("mouse_click")
+	 XY2 = X2..","..Y2
+-- ######## Window: moved function #########
+    	 if XY2 == (X + 8) .. "," .. Y then
+		  breakloop1()
+          para(terminate, LabyOSUpdateLogin1)
+		  break
+		 end
+    	 if XY2 == (X + 3) .. "," .. (Y + 3) then
+		  breakloop1()
+          para(terminate, LabyOSUpdateLogin1)
+		  break
+		 end
+		if XY2 == (X - 4) .. "," .. (Y + 3) then
+		    breakloop1()
+			loadscreen1()
+			s(1)
+			sbc(2048)
+			scp(1,1)
+			w([[                                                   ]])
+			scp(1,2)
+			s(0,1)
+			w([[                                                   ]])
+			scp(2,18)
+			s(0,1)
+			w([[                                                   ]])
+			sbc(8)
+			s(1)
+			r("clear")
+			stc(1)
+				for shutdown1=0,2 do
+				scp(20,9)
+				w([[: Shutdown]])
+				s(0.1)
+				scp(20,9)
+				w([[/ Shutdown]])
+				s(0.1)
+				scp(20,9)
+				w([[- Shutdown]])
+				s(0.1)
+				scp(20,9)
+				w([[\ Shutdown]])
+				s(0.1)
+			end
+			os.shutdown()
+		end
+-- #################################
+  end
+end
+-- ################################
+-- ###############################################################
+while true do
+      function loopbreak2a()
+	   loopbreak2 = 1
+	  end
+	 event, button, X, Y = os.pullEvent("mouse_click")
+	 XY = X..","..Y
+-- ######## Open window point #########
+   	  if XY == "2,18" and button == 1 then
+	   scp(4,18)
+	   sbc(2048)
+	   stc(1)
+	   write("You can move the window!")
+       para(click, drag)
+	  end 
+-- ############### select account #################
+-- ################# GUEST ###############
+      if X >= 17 and X <= 40 and Y == 5 or X >= 17 and X <= 40 and Y == 6 then
+	   stc(16)
+	     scp(40,6)
+	     w([[ <         ]])
+		 login2 = fs.open("LabyOS/Profile/User1", "r")
+         if login2 then
+          username1 = login2.readLine()
+		  userpass1 = login2.readLine()
+         end
+          login2.close()
+		   if username1 == "Free slot" then
+			  para(terminate, LabyOSUpdateLogin1)
+		   end
+		   if userpass1 == "no password" then
+		    loopbreak2a()
+            if not fs.exists("LabyOS/Online") then
+             fs.makeDir("LabyOS/Online")
+			end
+			  setOnline = fs.open("LabyOS/Online/data", "w")
+              setOnline.write(username1)
+              setOnline.close()
+		    runDesktop1()
+			else
+		    sbc(1)
+		    stc(32768)
+		    scp(22,6)
+		    sw([[                  ]])
+		    scp(22,6)
+		    passwordcheck1 = read("*")
+		     if passwordcheck1 == userpass1 then
+			  loopbreak2a()
+			if not fs.exists("LabyOS/Online") then
+             fs.makeDir("LabyOS/Online")
+			end
+			  setOnline = fs.open("LabyOS/Online/data", "w")
+              setOnline.write(username1)
+              setOnline.close()
+		      runDesktop1()
+		     else
+			  stc(16384)
+			  sbc(8)
+			  scp(22,6)
+			  sw([[Wrong password!                ]])
+			  s(1)
+			  scp(22,6)
+			  w([[Passwort            ]])
+		     end
+		   end
+      end
+-- ################# User 2 ###############
+if X >= 17 and X <= 40 and Y == 9 or X >= 17 and X <= 40 and Y == 10 then
+	   stc(16)
+	     scp(40,10)
+	     w([[ <         ]])
+		 login3 = fs.open("LabyOS/Profile/User2", "r")
+         if login3 then
+          username2 = login3.readLine()
+		  userpass2 = login3.readLine()
+         end
+          login3.close()
+		   if username2 == "Free slot" then
+			  para(terminate, LabyOSUpdateLogin1)
+		   end
+		   if userpass2 == "no password" then
+		    loopbreak2a()
+			if not fs.exists("LabyOS/Online") then
+             fs.makeDir("LabyOS/Online")
+			end
+			  setOnline = fs.open("LabyOS/Online/data", "w")
+              setOnline.write(username2)
+              setOnline.close()
+		    runDesktop1()
+		    else
+		    sbc(1)
+		    stc(32768)
+		    scp(22,10)
+		    sw([[                  ]])
+		    scp(22,10)
+		    passwordcheck1 = read("*")
+		     if passwordcheck1 == userpass2 then
+			  loopbreak2a()
+			if not fs.exists("LabyOS/Online") then
+             fs.makeDir("LabyOS/Online")
+			end
+			  setOnline = fs.open("LabyOS/Online/data", "w")
+              setOnline.write(username2)
+              setOnline.close()
+		      runDesktop1()
+		     else
+			  stc(16384)
+			  sbc(8)
+			  scp(22,10)
+			  sw([[Wrong password!                ]])
+			  s(1)
+			  scp(22,10)
+			  w([[Password            ]])
+		     end
+		   end
+      end
+-- ################# User 3 ###############
+if X >= 17 and X <= 40 and Y == 13 or X >= 17 and X <= 40 and Y == 14 then
+	   stc(16)
+	     scp(40,14)
+	     w([[ <         ]])
+		 login4 = fs.open("LabyOS/Profile/User3", "r")
+         if login4 then
+          username3 = login4.readLine()
+		  userpass3 = login4.readLine()
+         end
+          login4.close()
+		   if username3 == "Free slot" then
+			  para(terminate, LabyOSUpdateLogin1)
+		   end
+		   if userpass3 == "no password" then
+		    loopbreak2a()
+			if not fs.exists("LabyOS/Online") then
+             fs.makeDir("LabyOS/Online")
+			end
+			  setOnline = fs.open("LabyOS/Online/data", "w")
+              setOnline.write(username3)
+              setOnline.close()
+		    runDesktop1()
+		     else
+		    sbc(1)
+		    stc(32768)
+		    scp(22,14)
+		    sw([[                  ]])
+		    scp(22,14)
+		    passwordcheck1 = read("*")
+		     if passwordcheck1 == userpass3 then
+			  loopbreak2a()
+			if not fs.exists("LabyOS/Online") then
+             fs.makeDir("LabyOS/Online")
+			end
+			  setOnline = fs.open("LabyOS/Online/data", "w")
+              setOnline.write(username3)
+              setOnline.close()
+		      runDesktop1()
+		     else
+			  stc(16384)
+			  sbc(8)
+			  scp(22,14)
+			  sw([[Wrong password!                ]])
+			  s(1)
+			  scp(22,14)
+			  w([[Password            ]])
+		     end
+		   end
+      end
+-- ###############################################
+   if loopbreak2 == 1 then
+   break
+   end
+end
+end
+-- ######################################################### -- 
+if fs.exists("LabyOS/Config/SaveStart") then
+saveS = fs.open("LabyOS/Config/SaveStart", "r")
+SaveStart = saveS.readLine()
+saveS.close()
+else
+fs.makeDir("LabyOS/Config/")
+saveS = fs.open("LabyOS/Config/SaveStart", "w")
+saveS.write("false")
+saveS.close()
+end
 
-shell.run(runShell, modemSide)
+
+if SaveStart == "true" then
+saveS = fs.open("LabyOS/Config/SaveStart", "w")
+saveS.write("false")
+saveS.close()
+para(terminate, LabyOSUpdateLogin1) -- DEVELOPER                                                                   ######## FAST START #########
+elseif SaveStart == "trueKeep" then
+para(terminate, LabyOSUpdateLogin1)
+end
+-- ########################## -- Start Information -- ############################ -- 
+-- ## Color Test ## -- 
+r("clear")
+stc(1)
+p([[CraftOS 1.5]])
+if term.isColor() then
+elseif not term.isColor() then
+scp(13,1)
+stc(1)
+w([[    :INFO: LabyOS can't start.      ]])
+scp(13,2)
+p([[    :      You need an Advanced PC! ]])
+scp(13,3)
+p([[    +----------------------------------]])
+scp(1,2)
+w([[> ]])
+while true do
+inputerror1 = read()
+r(inputerror1)
+w([[> ]])
+end
+end
+-- ################# -- 
+-- ## HTTP Test ## -- 
+r("clear")
+stc(1)
+print(os.version())
+if http then
+elseif not http then
+scp(13,1)
+stc(1)
+w([[    :INFO: LabyOS can't start.      ]])
+scp(13,2)
+p([[    :      HTTP is not enabled!     ]])
+scp(13,3)
+p([[    +----------------------------------]])
+scp(1,2)
+w([[> ]])
+while true do
+inputerror1 = read()
+r(inputerror1)
+w([[> ]])
+end
+end
+-- ############### -- 
+-- ## Start Animation ## ---------------------------------------> START <--------------------------
+if fs.exists("LabyOS/Config/LabyOSUpdate") then
+fs.delete("LabyOS/Config/LabyOSUpdate")
+end
+s(1)
+-- ###################### -- 
+-- ## TabJump 1 ## -- 
+function tabjump2()
+        local sEvent, param = os.pullEvent("key")
+        if sEvent == "key" then
+			r("clear")
+			scp(1,19)
+			w([[Skip..]])
+			s(0.3)
+        end
+    end
+-- ############### -- 
+-- ## TabJump 2 ## -- 
+function tabjump1()
+tc()
+stc(16)
+scp(1,2)
+p([[Installed programs:]])
+scp(1,3)
+stc(8)
+s(0.1)
+r("programs")
+stc(16)
+s(0.5)
+p([[Memory:]])
+s(0.1)
+r("list")
+stc(16384)
+scp(16,19)
+p([[Press enter to skip]])
+-- ########################## -- Ladebalken 1 -- ############################ -- 
+stc(2)
+for loadup1=1,5 do
+loadup1=loadup1*20
+scp(24,16)
+w(loadup1)
+w([[%]])
+scp(27,16)
+w([[ ]])
+s(0.1)
+scp(20,17)
+w([[... ooo ...]])
+s(0.1)
+scp(20,17)
+w([[ .. Ooo .. ]])
+s(0.1)
+scp(20,17)
+w([[  . oOo .  ]])
+s(0.1)
+scp(20,17)
+w([[    ooO    ]])
+s(0.1)
+scp(22,17)
+w([[. ooo .]])
+s(0.1)
+scp(21,17)
+w([[.. ooo ..]])
+s(0.1)
+scp(20,17)
+w([[... ooo ...]])
+s(0.1)
+end
+r("clear")
+-- ############################################################################# -- 
+end
+function tabjumpshell()
+parallel.waitForAny(tabjump1, tabjump2)
+end
+tabjumpshell()
+-- ############### -- 
+function UpdaterL()
+
+
+fs.makeDir("LabyOS/Texture")
+	r("pastebin get QgZeJxkS LabyOS/Texture/Documents")
+	r("pastebin get U9TijTVq LabyOS/Texture/Login")
+fs.makeDir("LabyOS/Texture/Desktop")
+    r("pastebin get 9EvMFZbV LabyOS/Texture/Desktop/1")
+    r("pastebin get 007MQDJ6 LabyOS/Texture/Desktop/2")
+  
+-- ######################### -- Download Programme -- ############################ ---------------------------------#ADD Programme#--------------
+if not fs.exists("LabyOS/Config/TimeAPI") then
+TimeAPI = fs.open("LabyOS/Config/TimeAPI", "w")
+TimeAPI.write("EN")
+TimeAPI.close()
+end
+
+fs.makeDir("LabyOS/Programme/")
+fs.makeDir("LabyOS/Texture/bin")
+fs.makeDir("LabyOS/Documents/admin/labystudio/apps")
+
+r("delete startup")
+r("delete LabyOS/Programme/Shutdown")
+r("delete LabyOS/Programme/Setup")
+r("delete LabyOS/Programme/Run")
+r("delete LabyOS/Programme/Relog")
+r("delete LabyOS/Programme/Reboot")
+r("delete LabyOS/Programme/Desktop")
+r("delete LabyOS/Programme/Terminal")
+r("delete LabyOS/Programme/Manager")
+r("delete LabyOS/Programme/Documents")
+r("delete LabyOS/Programme/Browser")
+r("delete LabyOS/Programme/System")
+r("delete LabyOS/Programme/Shutdown")
+r("delete LabyOS/Programme/Settings")
+r("delete LabyOS/Programme/Paint")
+r("delete LabyOS/Programme/Editor")
+r("delete LabyOS/Texture/bin/Folder")
+r("delete LabyOS/Documents/admin/labystudio/apps/Skype")
+
+r("pastebin get eVph1zkH startup")
+r("pastebin get AyKYQzA8 LabyOS/Programme/Shutdown")
+r("pastebin get qPumvzFP LabyOS/Programme/Setup")
+r("pastebin get NYJ8Ccvi LabyOS/Programme/Run")
+r("pastebin get kr0MY3t7 LabyOS/Programme/Relog")
+r("pastebin get pGwVjzQC LabyOS/Programme/Reboot")
+r("pastebin get gpwSk1e2 LabyOS/Programme/Desktop")
+r("pastebin get Vi6Z9X5k LabyOS/Programme/Terminal")
+r("pastebin get GPEMdx1q LabyOS/Programme/Manager")
+r("pastebin get SJBQ2vhW LabyOS/Programme/Documents")
+r("pastebin get Y9kdU79Y LabyOS/Programme/Browser")
+r("pastebin get VRUmKTTY LabyOS/Programme/System")
+r("pastebin get CcdCv5wa LabyOS/Programme/Settings")
+r("pastebin get aL3UtyWV LabyOS/Programme/Paint")
+r("pastebin get myAdtvXj LabyOS/Programme/Editor")
+r("pastebin get JE3Ve34F LabyOS/Texture/bin/Task")
+r("pastebin get Znakc8nq LabyOS/Texture/bin/File")
+r("pastebin get Ped1KULT LabyOS/Texture/bin/Folder")
+-- apps
+r("pastebin get D9DefNaP LabyOS/Documents/admin/labystudio/apps/Skype")
+
+os.reboot()
+end
+-- ########################## -- Get FULL -- ############################ -- 
+function fullV2()
+scp(-90,10)
+stc(1)
+if http then
+if fs.exists("LabyOS/Config/LabyOSUpdate") then
+fs.delete("LabyOS/Config/LabyOSUpdate")
+end
+end
+-- ########################## -- Download Design -- ############################ -- 
+fs.makeDir("LabyOS/Config")
+	r("pastebin get gffqXK2c LabyOS/Config/LabyOSUpdate")
+	
+	
+if not fs.exists("LabyOS/Config/OSversion") then
+version = fs.open("LabyOS/Config/OSversion", "w")
+version.write(OfficialVersion)
+version.close()
+end
+if not fs.exists("LabyOS/Programme") then
+UpdaterL()
+end
+-- ######################### -- Load select -- ############################
+r("clear")
+para(terminate, LabyOSUpdateLogin1)
+end
+function fullV1()
+for loadup2=1,2 do
+loadup2=loadup2*45
+scp(24,16)
+w(loadup2)
+w([[%]])
+scp(27,16)
+w([[ ]])
+s(0.1)
+scp(20,17)
+w([[... ooo ...]])
+s(0.1)
+scp(20,17)
+w([[ .. Ooo .. ]])
+s(0.1)
+scp(20,17)
+w([[  . oOo .  ]])
+s(0.1)
+scp(20,17)
+w([[    ooO    ]])
+s(0.1)
+scp(22,17)
+w([[. ooo .]])
+s(0.1)
+scp(21,17)
+w([[.. ooo ..]])
+s(0.1)
+scp(20,17)
+w([[... ooo ...]])
+s(0.1)
+end
+end
+function fullV()
+parallel.waitForAny(fullV1(), fullV2())
+end
+-- ######################################################################### -- 
+-- ########################## -- Start auswahl -- ############################ -- 
+function Systemstart1()
+systemadd2 = {}
+systemadd1 = 1
+-- ## Optionen ## -- 
+systemadd2[1] = "Run LabyOS      "
+systemadd2[2] = "Run Updater     "
+systemadd2[3] = "Run CraftOS     "
+systemadd2[4] = "Run ElctronusOS "
+systemadd2[5] = "Uninstall LabyOS"
+-- ############## -- 
+function run1(numer)
+ if numer == 1 then
+-- ## Option 1 ## -- 
+fullV()
+-- ################ --  
+end
+ if numer == 2 then
+-- ## Option 2 ## -- 
+UpdaterL()
+-- ################ --  
+ end
+  if numer == 3 then
+-- ## Option 3 ## -- 
+r("clear")
+print(os.version())
+-- ################ --  
+ end
+  if numer == 4 then
+  r("/ElectOS")
+ end
+  if numer == 5 then
+-- ## Option 4 ## -- 
+p([[Uninstall LabyOS..]])
+s(0.1)
+p([[**RUN Uninstaller**]])
+s(0.1)
+r("delete LabyOS")
+r("delete OSVersion")
+r("delete startup")
+p([[**LabyOS removed**]])
+sleep(0.1)
+os.reboot()
+-- ################ --  
+ end
+end
+function Taste()
+ sleep(0)
+ event, argument = os.pullEvent()
+ if event == "key" then
+  if argument == 28 then
+   return run1(systemadd1)
+  elseif argument == 200 then
+   if systemadd1 == 1 then
+   else
+    systemadd1 = systemadd1 - 1
+   end
+  elseif argument == 208 then
+   if systemadd1 == table.getn(systemadd2) then
+   else
+    systemadd1 = systemadd1 + 1
+   end
+  else
+   return Taste()
+  end
+ else
+  return Taste()
+ end
+ return menu()
+end
+function menu()
+-- ## Option-Design ## -- 
+r("clear")
+stc(16)
+p([[LabyOS - Windows XP:]])
+stc(1)
+p([[---------------------------------------------------]])
+-- ################ --  
+ for i=1, table.getn(systemadd2) do
+  if systemadd1 == i then
+-- ## Option-Pfeil ## -- 
+   print("> "..systemadd2[i].."")
+  else
+   print("  "..systemadd2[i].."")
+-- ################ --  
+  end
+ end
+ return Taste()
+end
+shell.run("clear")
+return menu()
+end
+-- ## RUN ## -- 
+Systemstart1()
+-- ######### --
