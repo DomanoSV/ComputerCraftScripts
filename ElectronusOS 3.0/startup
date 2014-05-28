@@ -1,0 +1,162 @@
+-- ElectronusBIOS v2.0 -- 
+-- Developed by DomanoSV and Spook811 --
+-- Copyright DKE Domain 2014 - 2015 --
+
+-- Local Variables --
+tArgs = {...}
+local x,y = term.getSize()
+
+-- Load in API --
+os.loadAPI("/lib/libcore")
+
+-- Local Functions --
+
+
+-- Program --
+term.clear()
+term.setCursorPos(1,1)
+term.setBackgroundColor(colors.black)
+logo1 = { "_______", "/ ___/_/", "/ //__   ", "/ __/_/   ", "/ //____   ", "/_____/_/   ")
+logo2 = ("__", "_/", "/__", "_/", "/", "__", "_/"}
+logostr1 = "ElectronusOS"
+logostr2 = "BIOSv1.0  "
+logoHeight = table.getn(logo1)
+for i=1,logoHeight do
+	local w = (string.len(logo1[i]) + string.len(logo2[i]))
+	term.setCursorPos((x-w), i)
+	term.setTextColor(colors.lime)
+	write(logo1[i])
+	term.setTextColor(colors.lightBlue)
+	write(logo2[i])
+end
+term.setCursorPos((x - string.len(logostr1)), (logoHeight + 1))
+term.setTextColor(colors.yellow)
+write(logostr1)
+term.setCursorPos((x - string.len(logostr2)), (logoHeight + 2))
+term.setTextColor(colors.white)
+write(logostr1)
+
+term.setTextColor(colors.white)
+term.setCursorPos(1,1)
+term.write("ElectronusBIOS v1.0 Release 1.0")
+term.setCursorPos(1,2)
+term.write("Copyright 2012-2015 DKE Domain")
+sleep(1)
+term.setCursorPos(1,4)
+term.write("BlazeCore II Processor 2.0GHz")
+sleep(1)
+term.setCursorPos(1,5)
+term.write("4096MB System RAM")
+term.setCursorPos(19,5)
+textutils.slowPrint("...",3)
+term.setCursorPos(23,5)
+term.write("Passed")
+term.setCursorPos(1, 7)
+term.write("Physical Drives")
+term.setCursorPos(1,8)
+term.write("---------------")
+
+local sidesList = { "left", "right", "top", "bottom", "front", "back"}
+local driveCount = 1
+local modemExists = false
+local modemSide = "right"
+local bootDrive = "right"
+local bootDriveExists = false
+local mountName = disk
+noDiskBoot = false
+systemOS = "/authx"
+runShell = "/authx"
+
+for i = 1,6 do
+ sleep(0.5)
+ if peripheral.isPresent(sidesList[i]) then
+  if peripheral.getType(sidesList[i]) == "modem" then
+   modemExists = true
+   modemSide = sidesList[i]
+  elseif  peripheral.getType(sidesList[i]) == "drive" then
+   mountName = "[EMPTY]"
+   if disk.isPresent(sidesList[i]) then
+    mountName = disk.getMountPath(sidesList[i])
+   end
+   if driveCount > 1 then
+    term.setCursorPos(1,(6+driveCount))
+    term.write("Disk Drive: "..mountName.." - Connected ("..sidesList[i]..")")
+   else 
+    term.setCursorPos(1,(8+driveCount))
+    term.write("Bootable Disk Drive: "..mountName.." - Connected ("..sidesList[i]..")")
+    bootDrive = sidesList[i]
+    bootDriveExists = true
+   end
+   driveCount = driveCount + 1
+  end
+ end
+end
+
+sleep(1)
+if modemExists then
+ term.setCursorPos(1,17)
+ clientId = os.computerID()
+ print("Modem connected ("..modemSide.."). IP: ", clientId)
+else
+ term.setCursorPos(1,17)
+ print("Warning! No modem connected.")
+end
+
+sleep(1)
+term.setCursorPos(1,18)
+print("Booting [                                        ]")
+term.setCursorPos(9,18)
+textutils.slowPrint("[########################################]", 35)
+
+term.clear()
+term.setCursorPos(1,1)
+
+if bootDriveExists then
+ if disk.isPresent(bootDrive) then
+  mountName = disk.getMountPath(bootDrive)
+  print("Disk ("..mountName..") found in boot drive...")
+  sleep(1)
+  if disk.hasData(bootDrive) then 
+   if fs.exists("/"..mountName.."/autoexec") then
+    if fs.isDir("/"..mountName.."/autoexec") then
+     print("Disk is not a bootable disk...")
+     noDiskBoot = true
+     sleep(1)
+    else
+     print("Attempting to boot from "..mountName.." ...")
+     noDiskBoot = false
+     sleep(1)
+     runShell = "/"..mountName.."/autoexec"
+    end
+   else
+    print("Disk is not a bootable disk...")
+    noDiskBoot = true
+    sleep(1)
+   end 
+  else
+   print("Disk is not a bootable disk...") 
+   noDiskBoot = true
+   sleep(1)
+  end
+ end
+end
+
+if runShell == "/authx" then
+ if fs.exists(systemOS) then
+  if fs.isDir(systemOS) then
+   print("Unable to boot OS, has it been installed?")
+   sleep(5)
+   shell.exit()
+  else
+   print("Attempting to boot OS ...")
+   sleep(1)
+   runShell = systemOS
+  end
+ else
+  print("Unable to boot OS, has it been installed?")
+  sleep(5)
+  shell.exit()
+ end
+end
+
+shell.run(runShell, modemSide)

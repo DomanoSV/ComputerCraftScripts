@@ -21,6 +21,10 @@ uml = x-timeLen-userLen-1
 
 -- Tables --
 
+local mainMenu = {
+	[1] = {name = "Option 1", path = "/"}
+	[2] = {name = "Option 2", path = "/"}
+}
 
 local userMenu = {
 	[1] = {text = "Log Off"},
@@ -56,6 +60,30 @@ function toolBar()
 	write(user.." ")
 	term.setCursorPos(x-timeLen-userLen-ipLen-3, 1)
 	write("#"..ip.." ")
+end
+
+function mainMenuDraw()
+	local drawLine = 0
+	local i = 1
+	local linePos = 2
+
+	term.setTextColor(colorH)
+	term.setCursorPos(2, 1)
+	write("E")
+	term.setTextColor(colorT)
+
+	lineTotal = #mainMenu
+  
+	while drawLine <= lineTotal do
+		paintutils.drawLine(2, linePos, 12, linePos, colorB)
+		print(userMenu[i].name)
+		menuOption + 1
+		linePos + 1
+		paintutils.drawLine(2, linePos, 12, linePos, colorB)
+		linePos + 1
+
+		drawLine + 1
+	end
 end
 
 function userMenuDraw()
@@ -102,7 +130,9 @@ while true do
 	 	click(event, p1, p2, p3) 
  	else
 		 if p2 >= uml and p2 <= uml+userLen and p3 == 1 then
-    userMenuDraw()
+			userMenuDraw()
+		elseif p2 >= 0 and p2 <= 3 and p3 == 1 then
+			mainMenuDraw()
    end
 	 end
  end
