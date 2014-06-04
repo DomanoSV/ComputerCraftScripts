@@ -1,0 +1,447 @@
+-- File Manager for ElectronousOS 3.0 Basic             -- 
+-- Developed by DomanoSV and Spook811                   --
+-- Copyright DKE Domain 2014 - 2015                     --
+
+-- This is the ElectronousOS File Manager, it is        --
+-- designed to give the user a feature full GUI to help --
+-- file system operations.                  ~DomanoSV   --
+
+-- Local Variables                                      --
+tArgs = {...}
+local username,dir = tArgs[1],tArgs[2]
+local x,y = term.getSize()
+local centerUnreadBar = math.ceil((x / 2) - (20 / 2))
+local dirFileList = { }
+local menu = { }
+local selectedFile = ""
+local slc = 1
+local menuslc = 1
+local confirmslc = 2
+local page = 1
+local currentDir = "/"
+local scroll = 1
+local timer
+local copyEnable = false
+local copyDir = ""
+local copyFile = ""
+local copyOperator = "cp"
+
+-- Load in API                                          --
+os.loadAPI("/lib/libcore")
+
+-- Local Functions                                      --
+-- Get directory and file list in the current folder.   --
+function getFileList(wDir)
+ fileList = fs.list(wDir)
+ directories = { }
+ files = { }
+ table.sort(fileList)
+ for i,v in ipairs(fileList) do
+  if fs.isDir(wDir.."/"..v) then
+   if v ~= "rom" then
+    table.insert(directories, {
+      type = "dir",
+      name = v,
+      size = 0
+    })
+   end
+  else
+   table.insert(files, {
+      type = "file",
+      name = v,
+      size = fs.getSize(wDir.."/"..v)
+    })
+  end
+ end
+ for i=1,table.maxn(files) do
+  table.insert(directories, files[i])
+ end
+ dirFileList = directories
+ table.insert(directories, 1, {
+      type = "operator",
+      name = "/..",
+      size = 0
+    })
+end
+
+-- Gets the options in the side menu.                   --
+function getSideMenu()
+ if dirFileList[slc].type == "dir" or dirFileList[slc].type == "file" then
+  menu = { "Open", "Cut", "Copy", "Delete", "Rename", "Exit" }
+  if copyEnable then
+   table.insert(menu, 4, "Paste")
+  end
+ elseif dirFileList[slc].type == "operator" then
+  menu = { "Create Folder", "Create File", "Exit" }
+  if copyEnable then
+   table.insert(menu, 3, "Paste")
+  end
+ end
+end
+
+-- Draws the sidebar menu.                              --
+function printMenu()
+ for i,v in pairs(menu) do
+  if page == 2 then
+   if i == menuslc then
+    term.setBackgroundColor(colors.white)
+    term.setTextColor(colors.black)
+    if i ~= table.maxn(menu) then
+     term.setCursorPos((x-18),3+i)
+     print(v..string.rep(" ", (19-string.len(v))))
+    else
+     term.setCursorPos((x-18),y-3)
+     print(v..string.rep(" ", (19-string.len(v))))
+    end
+   else
+    term.setBackgroundColor(colors.black)
+    term.setTextColor(colors.white)
+    if i ~= table.maxn(menu) then
+     term.setCursorPos((x-18),3+i)
+     print(v)
+    else
+     term.setCursorPos((x-18),y-3)
+     print(v)
+    end
+   end
+  else
+   if i ~= table.maxn(menu) then
+    term.setCursorPos((x-18),3+i)
+    print(v)
+   else
+    term.setCursorPos((x-18),y-3)
+    print(v)
+   end
+  end
+ end
+end
+
+-- Prints the directories and files on the screen so    --
+-- the user can see, and choose file system operations  --
+-- accordingly.                                         --
+function printTableRow(text, size)
+  term.write(text)
+  for i=string.len(text),(x-31) do
+   term.write(" ")
+  end
+  term.write(tostring(size))
+  for i=string.len(tostring(size)),7 do
+   term.write(" ")
+  end
+  print(" ")
+end
+
+-- Draws a message box popup.                           --
+function printMsgBox()
+ local boxbordersize = 46
+ local boxsize = 44
+ term.setBackgroundColor(colors.white)
+ libcore.centerText(string.rep(" ", boxbordersize), 7)
+ libcore.centerText(string.rep(" ", boxbordersize), 8)
+ libcore.centerText(string.rep(" ", boxbordersize), 9)
+ libcore.centerText(string.rep(" ", boxbordersize), 10)
+ libcore.centerText(string.rep(" ", boxbordersize), 11)
+ libcore.centerText(string.rep(" ", boxbordersize), 12)
+ libcore.centerText(string.rep(" ", boxbordersize), 13)
+ libcore.centerText(string.rep(" ", boxbordersize), 14)
+ term.setBackgroundColor(colors.black)
+ libcore.centerText(string.rep(" ", boxsize), 8)
+ libcore.centerText(string.rep(" ", boxsize), 9)
+ libcore.centerText(string.rep(" ", boxsize), 10)
+ libcore.centerText(string.rep(" ", boxsize), 11)
+ libcore.centerText(string.rep(" ", boxsize), 12)
+ libcore.centerText(string.rep(" ", boxsize), 13)
+ term.setBackgroundColor(colors.black)
+ term.setTextColor(colors.white)
+end
+
+-- Prints Confirm and Cancel buttons in message box.    --
+function printConfirmMenu()
+  local ws = string.rep(" ", 4)
+  term.setCursorPos(centerUnreadBar, 12)
+  term.setBackgroundColor(colors.black)
+  term.setTextColor(colors.white)
+  if confirmslc == 1 then
+   term.write("[  OK  ]")
+  else 
+   term.write("   OK   ")
+  end
+  term.write(ws)
+  if confirmslc == 2 then
+   term.write("[CANCEL]")
+  else 
+   term.write(" CANCEL ")
+  end
+end
+
+-- Initializes and draws file browser.                  --
+timer = os.startTimer(0)
+while true do
+ getFileList(shell.resolve("."))
+ getSideMenu()
+ term.setBackgroundColor(colors.black)
+ term.clear()
+ term.setCursorPos(1,1)
+ term.setTextColor(colors.white)
+ term.write(string.rep(" ", x))
+ libcore.centerText("ElectronusOS File Manager", 1)
+ term.setCursorPos(1,2)
+ term.setBackgroundColor(colors.white)
+ term.setTextColor(colors.black)
+ term.write(string.rep(" ", x))
+ term.setCursorPos(1,2)
+ term.write(" Hello, "..username.."!")
+ local time = os.time()
+ timeFmt = textutils.formatTime(time, false)
+ timeLen = string.len(timeFmt)
+ term.setCursorPos(x-timeLen,2)
+ term.write(timeFmt)
+ term.setBackgroundColor(colors.black)
+ term.setTextColor(colors.white)
+ term.setCursorPos(1,3)
+ term.write(string.rep(" ", (x-20)))
+ term.setCursorPos(1,3)
+ term.write(" Name"..string.rep(" ", (x-35)).."Size")
+ term.setCursorPos(1,y-1)
+ term.write(string.rep(" ", x))
+ term.setCursorPos(1,y-1)
+ term.write("/"..shell.resolve("."))
+ for i=3,y-2 do
+  term.setCursorPos((x-20),i)
+  term.setBackgroundColor(colors.black)
+  term.write("|"..string.rep(" ", 20))
+ end
+ term.setCursorPos((x-18),3)
+ printMenu()
+ term.setBackgroundColor(colors.black)
+ term.setCursorPos(1,y)
+ term.setBackgroundColor(colors.white)
+ term.write(string.rep(" ", x))
+ term.setCursorPos(1,y)
+ term.setBackgroundColor(colors.black)
+ term.setCursorPos(1,4)
+
+ for i=scroll,((y-6) + scroll) do
+  if i <= table.maxn(dirFileList) then
+   if slc == i then
+    if dirFileList[i].type == "operator" then
+     term.setBackgroundColor(colors.white)
+     term.setTextColor(colors.black)
+     printTableRow(dirFileList[i].name, " ")
+    elseif dirFileList[i].type == "dir" then
+     term.setBackgroundColor(colors.white)
+	 term.setTextColor(colors.black)
+     printTableRow("/"..dirFileList[i].name, dirFileList[i].size)
+    elseif dirFileList[i].type == "file" then
+     term.setBackgroundColor(colors.white)
+     term.setTextColor(colors.black)
+     printTableRow(" "..dirFileList[i].name, dirFileList[i].size)
+    end
+   else
+    if dirFileList[i].type == "operator" then
+     term.setBackgroundColor(colors.black)
+     term.setTextColor(colors.white)
+     printTableRow(dirFileList[i].name, " ")
+    elseif dirFileList[i].type == "dir" then
+     term.setBackgroundColor(colors.black)
+ 	 term.setTextColor(colors.white)
+     printTableRow("/"..dirFileList[i].name, dirFileList[i].size)
+    elseif dirFileList[i].type == "file" then
+     term.setBackgroundColor(colors.black)
+	 term.setTextColor(colors.white)
+     printTableRow(" "..dirFileList[i].name, dirFileList[i].size)
+    end
+   end
+  else
+   break
+  end
+ end
+ term.setBackgroundColor(colors.black)
+ term.setTextColor(colors.white)
+ 
+ if page == 3 then
+   local str1 = dirFileList[slc].name
+   local str2 = "file"
+   if fs.isDir(shell.resolve(".").."/"..str1) then
+	str2 = "folder"
+   else
+	str2 = "file"
+   end
+   printMsgBox()
+   printConfirmMenu()
+   libcore.centerText("You're sure you wish to delete the "..str2, 9)
+   libcore.centerText(str1.."?", 10)
+ end
+ 
+ local event, p1, p2 = os.pullEvent()
+ if event == "key" then 
+  if page == 1 then
+   if p1 == keys.up and slc > 1 then 
+    if slc == scroll then
+	 slc = slc - 1
+	 scroll = scroll - 1
+    else
+	 slc=slc-1
+	end
+   elseif p1 == keys.down and slc < table.maxn(dirFileList) then 
+    if slc == ((y-6) + scroll) then
+     slc = slc + 1
+	 scroll = scroll + 1
+    else
+     slc=slc+1
+    end
+   elseif p1 == keys.right then
+    page = 2
+	menuslc = 1
+   elseif p1 == keys.enter then
+    if dirFileList[slc].type == "operator" then
+	 shell.run("cd", "..")
+	 slc = 1
+    elseif dirFileList[slc].type == "dir" then
+	 shell.run("cd", dirFileList[slc].name)
+	 slc = 1
+	elseif dirFileList[slc].type == "file" then
+	 shell.run("edit", dirFileList[slc].name)
+	 timer = os.startTimer(0.1)
+	end
+   end
+  elseif page == 2 then
+   if p1 == keys.up and menuslc > 1 then menuslc=menuslc-1
+   elseif p1 == keys.down and menuslc < table.maxn(menu) then menuslc=menuslc+1
+   elseif p1 == keys.enter then
+    if menu[menuslc] == "Delete" then
+     page = 3
+	elseif menu[menuslc] == "Cut" then
+     copyOperator = "mv"
+	 copyFile = dirFileList[slc].name
+	 copyDir = shell.resolve(".").."/"..dirFileList[slc].name
+	 copyEnable = true
+    elseif menu[menuslc] == "Copy" then
+     copyOperator = "cp"
+	 copyFile = dirFileList[slc].name
+	 copyDir = shell.resolve(".").."/"..dirFileList[slc].name
+	 copyEnable = true
+	elseif menu[menuslc] == "Create File" then
+	 local yPos = y-2
+	 local num = 2
+     term.setCursorPos(1, yPos)
+	 term.write("|")
+	 term.write(string.rep(" ", x-22))
+   	 term.setCursorPos(2, yPos)
+	 input = read()
+	 input = string.gsub(input, "%s+", "-")
+	 local nameFile = input
+     if fs.exists(shell.resolve(".").."/"..input) then
+	  while true do
+	   if fs.exists(shell.resolve(".").."/"..nameFile) then
+	    nameFile = input
+	    nameFile = nameFile..tostring(num)
+	    num = num + 1
+	   else
+	    break
+	   end
+	  end
+     end
+	 file = fs.open(shell.resolve(".").."/"..nameFile, "w")
+	 file.write("")
+	 file.close()
+	 slc = 1
+	 scroll = 1
+	 page = 1
+	 timer = os.startTimer(0.1)
+    elseif menu[menuslc] == "Create Folder" then
+	 local yPos = y-2
+	 local num = 2
+     term.setCursorPos(1, yPos)
+	 term.write("|")
+	 term.write(string.rep(" ", x-22))
+   	 term.setCursorPos(2, yPos)
+	 input = read()
+	 input = string.gsub(input, "%s+", "-")
+	 local nameFile = input
+	 if fs.exists(shell.resolve(".").."/"..input) then
+	  while true do
+	   if fs.exists(shell.resolve(".").."/"..nameFile) then
+	    nameFile = input
+	    nameFile = nameFile..tostring(num)
+	    num = num + 1
+	   else
+	    break
+	   end
+	  end
+	 end
+	 shell.run("mkdir", nameFile)
+	 slc = 1
+	 scroll = 1
+	 page = 1
+	 timer = os.startTimer(0.1)
+	elseif menu[menuslc] == "Paste" then
+	 local num = 2
+	 local nameFile = copyFile
+	 if fs.exists(shell.resolve(".").."/"..copyFile) then
+	  while true do
+	   if fs.exists(shell.resolve(".").."/"..nameFile) then
+	    nameFile = copyFile
+	    nameFile = nameFile..tostring(num)
+	    num = num + 1
+	   else
+	    break
+	   end
+	  end
+	 end
+	 shell.run(copyOperator, copyDir, nameFile)
+	 page = 1
+	 slc = 1
+	 scroll = 1
+	 copyEnable = false
+	elseif menu[menuslc] == "Open" then
+	 if dirFileList[slc].type == "dir" then
+	  shell.run("cd", dirFileList[slc].name)
+	 elseif dirFileList[slc].type == "file" then
+	  shell.run("edit", dirFileList[slc].name)
+	  timer = os.startTimer(0.1)
+	 end
+	 page = 1
+	 slc = 1
+	 scroll = 1
+	elseif menu[menuslc] == "Rename" then
+	 local yPos = 4+(slc-scroll)
+     term.setCursorPos(1, yPos)
+	 term.write("|")
+	 term.write(string.rep(" ", x-22))
+   	 term.setCursorPos(2, yPos)
+	 input = read()
+	 input = string.gsub(input, "%s+", "-")
+	 shell.run("mv", dirFileList[slc].name, input)
+	 slc = 1
+	 scroll = 1
+	 page = 1
+	 timer = os.startTimer(0.1)
+	elseif menu[menuslc] == "Exit" then
+	 break
+	end
+   elseif p1 == keys.left and page == 2 then
+    page = 1
+	menuslc = 1
+   end
+  elseif page == 3 then
+   if p1 == keys.left and confirmslc > 1 then confirmslc=confirmslc-1
+   elseif p1 == keys.right and confirmslc < 2 then confirmslc=confirmslc+1
+   elseif p1 == keys.enter then
+    if confirmslc == 1 then
+	 shell.run("rm", dirFileList[slc].name)
+     slc = 1
+	 scroll = 1
+     page = 1
+    else
+     page = 2	
+	end
+    confirmslc = 2
+   end
+   timer = os.startTimer(0.1)
+  end
+ end
+ if event == "timer" and p1 == timer then
+  timer = os.startTimer(0.1)
+ end
+end

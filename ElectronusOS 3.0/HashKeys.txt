@@ -1,0 +1,14 @@
+hash keys
+----------------------------
+
+-- Request PDC IP --
+TE89u2XPns
+
+-- Confirm PDC IP --
+hccwC900IS
+
+-- Sending Username to PDC (NO SPACES) --
+7Cc0SeRovq[USERNAME]
+
+-- Access Has been granted to client --
+1y4nT79gcn

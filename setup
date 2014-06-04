@@ -1,0 +1,311 @@
+local getFiles = {      [1] = { hash = "twE7zykd", fileName = "/startup", advanced = "both" },
+                                        [2] = { hash = "U2FD19px", fileName = "/authx", advanced = "yes" },
+                                        [3] = { hash = "wVmGavh5", fileName = "/kernel", advanced = "yes" },
+                                        [4] = { hash = "Dq0ER0e9", fileName = "/aptitude", advanced = "yes" },
+                                        [5] = { hash = "gksTmz02", fileName = "/bin/mailclient", advanced = "yes" },
+                                        [6] = { hash = "VwkrHm6K", fileName = "/bin/gfile", advanced = "yes" },
+                                        [7] = { hash = "auqGadJq", fileName = "/bin/filemanager", advanced = "yes" },
+                                        [8] = { hash = "pXPz8A5u", fileName = "/bin/desktop", advanced = "no" },
+                                        [9] = { hash = "wtRw8AYC", fileName = "/bin/filemanager", advanced = "no" },
+                                        [10] = { hash = "YMKmJYZt", fileName = "/boot/initrd", advanced = "no" },
+                                        [11] = { hash = "sckdcw0j", fileName = "/boot/initrd", advanced = "yes" },
+                                        [12] = { hash = "5ZBDDbCG", fileName = "/boot/kernel", advanced = "no" },
+                                        [13] = { hash = "WArVpM7X", fileName = "/lib/libcore", advanced = "both" }
+                                 }
+local makeDirs = {  "bin",
+                                        "bin/app",
+                                        "boot",
+                                        "dev",
+                                        "etc",
+                                        "etc/default",
+                                        "etc/sysconfig",
+                                        "home",
+                                        "lib",
+                                        "proc",
+                                        "root",
+                                        "root/Documents",
+                                        "tmp",
+                                        "var",
+                                        "var/log","var/tmp"
+                                 }
+local w,h = term.getSize()
+local numFileOperations = math.ceil(table.maxn(getFiles) + table.maxn(makeDirs))
+local progressBarLoc = math.ceil((w / 2) - (31/ 2)) + 1
+local page = 1
+local state = 1
+local slc = 1
+ 
+-- GENERAL FUNCTIONS --
+function getNumbFileOperations()
+local c = 1
+        if term.isColor() then
+                for i=1,#getFiles do
+                        if getFiles[i].advanced == "both" or getFiles[i].advanced == "yes" then
+                                c = c + 1
+                        end
+                end
+        else
+                for i=1,#getFiles do
+                        if getFiles[i].advanced == "both" or getFiles[i].advanced == "no" then
+                                c = c + 1      
+                        end
+                end
+        end
+        c = c + table.maxn(makeDirs)
+        return c
+end
+ 
+local function getFile(sCode, sFile, sOverride)
+ local sPath = shell.resolve( sFile )
+ if fs.exists( sPath ) then
+  if sOverride == "" or sOverride ~= "y" then
+   return
+  end
+ end
+ local response = http.get("http://pastebin.com/raw.php?i="..textutils.urlEncode( sCode ))
+ if response then
+  local sResponse = response.readAll()
+  response.close()
+  local file = fs.open( sPath, "w" )
+  file.write( sResponse )
+  file.close()
+ else
+  print( "Failed." )
+  sleep(2)
+  exit()
+ end
+end
+ 
+-- PRINT INTERFACE FUNCTIONS --
+ 
+local function printRight(height, value)
+  local xpos = w - string.len(value)
+  term.setCursorPos(xpos, height)
+  term.write(value)
+end
+ 
+local function printCentered(height, value)
+  local xpos = math.ceil((w / 2) - (string.len(value) / 2)) + 1
+  term.setCursorPos(xpos, height)  
+  term.write(value)
+end
+ 
+local function printInterface()
+  term.setBackgroundColor(colors.black)
+  term.setTextColor(colors.white)
+  term.clear()
+  term.setBackgroundColor(colors.white)
+  term.setCursorPos(1,h)
+  term.write(string.rep(" ", w))
+  term.setBackgroundColor(colors.black)
+  term.setCursorPos(1,1)
+end
+ 
+local function printProgressBox()
+  local boxbordersize = 39
+  local boxsize = 37
+  local progressbar = 31
+  printCentered(13, "+"..string.rep("-", boxsize).."+")
+  printCentered(14, "|"..string.rep(" ", boxsize).."|")
+  printCentered(15, "|"..string.rep(" ", boxsize).."|")
+  printCentered(16, "|"..string.rep(" ", boxsize).."|")
+  printCentered(17, "+"..string.rep("-", boxsize).."+")
+  printCentered(14, string.rep(" ", boxsize))
+  printCentered(15, string.rep(" ", boxsize))
+  printCentered(16, string.rep(" ", boxsize))
+  term.setBackgroundColor(colors.black)
+  printCentered(15, string.rep(" ", progressbar))
+  term.setBackgroundColor(colors.black)
+end
+ 
+function printNextButton()
+  term.setCursorPos(w-8, h)
+  term.setBackgroundColor(colors.black)
+  term.setTextColor(colors.white)
+  term.write("[ NEXT ]")
+  term.setBackgroundColor(colors.black)
+end
+ 
+function printDoneButton()
+  term.setCursorPos(w-8, h)
+  term.setBackgroundColor(colors.black)
+  term.setTextColor(colors.white)
+  term.write("[ DONE ]")
+  term.setBackgroundColor(colors.black)
+end
+ 
+-- RUN INTERFACE --
+ 
+while true do
+  if state == 1 then
+    if page == 1 then
+          printInterface()
+          print("Welcome the the ElectronusOS Setup")
+          print("==================================")
+          print(" ")
+          print("Welcome to the ElectronusOS setup for ComputerCraft systems. ElectronusOS is a new cutting edge OS bought to you by the DKE Domain for you to bask in it's wonder and enjoy the simplicity of it.")
+      print("")
+          print("DKE brings to you a system that is flexible, allows you to communicate with your friends and just looks visually pleasing to the eye.")
+          print("")
+          print("We here at DKE hope you enjoy your new system.")
+          print("")
+          print("~DomanoSV")
+          print("")
+      print("Press [NEXT] to begin the installation.")
+          term.setCursorPos(1,18)
+          term.setTextColor(colors.white)
+      print("Setup will backup your startup file if it exists.")  
+      term.setTextColor(colors.white)    
+          sleep(1)
+          state = 2
+        elseif page == 2 then
+                        printInterface()
+                        print("Installing ElectronusOS")
+                        print("=======================")
+                        print(" ")
+                        print("The setup will now download the remainder of the system files and setup your new ElectronusOS System.")
+                        print("")
+                        print("After setup has downloaded and installed all of the new system files, you will be asked to configure your new system.")
+                        printProgressBox()
+                        term.setCursorPos(progressBarLoc, 15)
+                        term.setBackgroundColor(colors.white)
+                        if fs.exists("startup") and not fs.exists("startup.bak") then
+                                fs.move("startup", "startup.bak")
+                        end
+                        term.write(" ")
+                        numFileOperations = getNumbFileOperations()
+                        for i=1,#makeDirs do
+                                local dir = makeDirs[i]
+                                if fs.exists(dir) and fs.isDir(dir) then
+                                else
+                                        fs.makeDir(dir)
+                                end
+                                sleep(0.2)
+                                term.write(string.rep(" ", math.ceil((100/30)/numFileOperations)))
+                        end
+                        if term.isColor() then
+                                for i=1,#getFiles do
+                                        if getFiles[i].advanced == "both" or getFiles[i].advanced == "yes" then
+                                                getFile(getFiles[i].hash, getFiles[i].fileName, "y")
+                                                term.write(string.rep(" ", math.ceil((100/30)/numFileOperations)))     
+                                        end
+                                end
+                        else
+                                for i=1,#getFiles do
+                                        if getFiles[i].advanced == "both" or getFiles[i].advanced == "no" then
+                                                getFile(getFiles[i].hash, getFiles[i].fileName, "y")
+                                                term.write(string.rep(" ", math.ceil((100/30)/numFileOperations)))     
+                                        end
+                                end
+                        end
+                        term.setCursorPos(progressBarLoc, 15)
+                        term.write(string.rep(" ", 31))
+                        state = 2
+        elseif page == 3 then
+          printInterface()
+          print("Setup Admin Account")
+          print("===================")
+          print("")
+          print("Setup will now require you to setup your 'root' password to be able to access this computer without an authentication server.")
+      print("")
+      print("This is to allow you perform administrative tasks or conduct normal operations on this machine, in the event this becomes a standalone system.")
+          term.setBackgroundColor(colors.black)
+          term.setCursorPos(progressBarLoc, 15)
+          term.write(string.rep("_", 31))
+          term.setCursorPos(progressBarLoc, 15)
+          local password = read("*")
+          term.setBackgroundColor(colors.black)
+          term.setCursorPos(progressBarLoc, 15)
+          term.write(string.rep(" ", 31))
+          term.setTextColor(colors.white)
+          term.setCursorPos(1,15)
+          print("DONE! Settings Saved.")
+          file = fs.open(shell.resolve(".").."/etc/passwd", "w")
+          if term.isColor() then
+            file.write("sudoPasswd="..password)
+          else
+            file.write(":@:root:@:"..password)
+          end
+          file.close()
+          state = 2
+        elseif page == 4 then
+          printInterface()
+          local inputBox = math.ceil((w / 2) - (4 / 2))+1
+          print("Setup Authentication")
+          print("====================")
+          print("")
+          print("Setup will now require you to setup your authentication preferences, all that is required from you is the Server ID for you authentication server.")
+          print("")
+          print("Don't worry, if unknown leave blank. You can always edit /etc/authx.conf later on using your admin account.")
+          term.setBackgroundColor(colors.black)
+          term.setCursorPos(inputBox, 15)
+          term.write(string.rep("_", 4))
+          term.setCursorPos(inputBox, 15)
+          local serverId = read()
+          if serverId == "" then
+           serverId = "0"
+          end
+          term.setBackgroundColor(colors.black)
+          term.setCursorPos(inputBox, 15)
+          term.write(string.rep(" ", 4))
+          term.setTextColor(colors.white)
+          term.setCursorPos(1,15)
+          print("DONE! Settings Saved.")
+          file = fs.open(shell.resolve(".").."/etc/authx.conf", "w")
+      file.write("serverid="..serverId)
+      file.close()
+      state = 2
+        elseif page == 5 then
+          printInterface()
+          local inputBox = math.ceil((w / 2) - (4 / 2))+1
+          print("Setup Email Client")
+          print("==================")
+          print("")
+          print("Setup will now require you to setup your email client, all that is required from you is the Server ID for your email server.")
+          print("")
+          print("Don't worry, if unknown leave blank. You can always edit /etc/mail.conf later on using your admin account.")
+          term.setBackgroundColor(colors.black)
+          term.setCursorPos(inputBox, 15)
+          term.write(string.rep("_", 4))
+          term.setCursorPos(inputBox, 15)
+          local serverId = read()
+          if serverId == "" then
+           serverId = "0"
+          end
+          term.setBackgroundColor(colors.black)
+          term.setCursorPos(inputBox, 15)
+          term.write(string.rep(" ", 4))
+          term.setTextColor(colors.white)
+          term.setCursorPos(1,15)
+          print("DONE! Settings Saved.")
+          file = fs.open(shell.resolve(".").."/etc/mail.conf", "w")
+      file.write("serverid="..serverId)
+      file.close()
+      state = 2
+    elseif page == 6 then
+          printInterface()
+          print("Setup Complete")
+          print("==============")
+          print("")
+          print("Well done! the setup is now complete, you can now use your new system.")
+          print("")
+          print("All of us from DKE hope you enjoy it!")
+      state = 3
+        end
+  elseif state == 2 then
+    printNextButton()
+    local e, key = os.pullEvent("key")
+        if key == 28 then
+          state = 1
+      page = page + 1
+    end
+  elseif state == 3 then
+    printDoneButton()
+    local e, key = os.pullEvent("key")
+    if key == 28 then
+      fs.delete("/setup") --remove the installer
+      sleep(2)
+      os.reboot()
+    end
+  end
+end

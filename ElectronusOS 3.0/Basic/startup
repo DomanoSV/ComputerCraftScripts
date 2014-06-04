@@ -1,0 +1,263 @@
+-- ElectronusBIOS v2.0                                  -- 
+-- Developed by DomanoSV and Spook811                   --
+-- Copyright DKE Domain 2014 - 2015                     --
+
+-- This boot manager is completely standalone it        -- 
+-- requires no other files or API library to run. It    --
+-- will interface with whatever system you have         --
+-- installed.                                 ~DomanoSV --
+
+-- Local Variables                                      --
+local x,y = term.getSize()
+local bootOpt = { }
+local sidesList = { "left", "right", "top", "bottom", "front", "back"}
+local driveCount = 1
+local modemExists = false
+local modemSide = "right"
+local bootDriveExists = false
+local bootDrive = "right"
+local bootableDisk = false
+local mountName = "disk"
+local labLen = 15
+local slc = 1
+
+-- Local Functions                                      --
+-- Draw Electronus Logo On Screen Function              --
+local function drawLogo()
+	local logo1 = { "_____", "/ ___/", "/ /", "/ __/", "/ /", "/_____/" }
+	local logo2 = { "__", "_/", "/", "_/   ", "/", "_/   " }
+	local logo3 = { "", "", "", "", "__", "" } 
+	local logo4 = { "", "", "__   ", "", "__   ", "" } 
+	local logostr1 = "Electronus "
+	local logostr2 = "BIOSv2.0  "
+	local logoHeight = table.getn(logo1)
+	if term.isColor() then
+		for i=1,logoHeight do
+			local w = (string.len(logo1[i]) + string.len(logo2[i]) + string.len(logo3[i]) + string.len(logo4[i]))
+			term.setCursorPos((x-w), i)
+			term.setTextColor(colors.lime)
+			write(logo1[i])
+			term.setTextColor(colors.lightBlue)
+			write(logo2[i])
+			term.setTextColor(colors.lime)
+			write(logo3[i])
+			term.setTextColor(colors.lightBlue)
+			write(logo4[i])
+		end
+		term.setCursorPos((x - string.len(logostr1)), (logoHeight + 1))
+		term.setTextColor(colors.yellow)
+		write(logostr1)
+		term.setCursorPos((x - string.len(logostr2)), (logoHeight + 2))
+		term.setTextColor(colors.white)
+		write(logostr2)
+	else
+		term.setTextColor(colors.white)
+	    for i=1,logoHeight do
+			local w = (string.len(logo1[i]) + string.len(logo2[i]) + string.len(logo3[i]) + string.len(logo4[i]))
+			term.setCursorPos((x-w), i)
+			write(logo1[i]..logo2[i]..logo3[i]..logo4[i])
+		end
+		term.setCursorPos((x - string.len(logostr1)), (logoHeight + 1))
+		write(logostr1)
+		term.setCursorPos((x - string.len(logostr2)), (logoHeight + 2))
+		write(logostr2)
+	end
+end
+
+-- Print Centred Text Function                          --
+function centerText(text, line)
+	x,y = term.getSize()
+	term.setCursorPos(math.ceil((x / 2) - (text:len() / 2)), line)
+	term.write(text)
+end
+
+-- Split String Function                                --
+function split(str, pattern)
+	local t = { }
+	local fpat = "(.-)" .. pattern
+	local last_end = 1
+	local s, e, cap = str:find(fpat, 1)
+	while s do
+		if s ~= 1 or cap ~= "" then
+			table.insert(t,cap)
+		end
+		last_end = e+1
+		s, e, cap = str:find(fpat, last_end)
+	end
+	if last_end <= #str then
+		cap = str:sub(last_end)
+		table.insert(t, cap)
+	end
+	return t
+end
+
+-- Get list of Boot Options Function                    --
+local function readBootOptions()
+	if not fs.exists("/boot/initrd") then return end
+	local file = io.open("/boot/initrd", "r")
+	c = 0
+	for line in file:lines()do
+		c = c + 1
+		local t = split(line, ";")
+		table.insert(bootOpt, { 
+			name = t[1],
+			dir = t[2],
+			args = t[3] })
+		if c == 7 then break end  
+	end
+	if bootableDisk then
+		table.insert(bootOpt, { 
+			name = "Bootable Disk",
+			dir = mountName,
+			args = ""})
+	end
+	file:close()
+end
+
+-- Perform initial startup and do basic scan for        --
+-- peripherals                                          --
+term.clear()
+term.setCursorPos(1,1)
+term.setBackgroundColor(colors.black)
+drawLogo()
+term.setTextColor(colors.white)
+term.setCursorPos(1,1)
+term.write("ElectronusBIOS v2.0 Release 1.0")
+term.setCursorPos(1,2)
+term.write("Copyright 2014-2015 DKE Domain")
+sleep(.1)
+term.setCursorPos(1,4)
+term.write("BlazeCore Processor 3.4GHz")
+sleep(.2)
+term.setCursorPos(1,5)
+term.write("4096MB System RAM")
+term.setCursorPos(19,5)
+textutils.slowPrint("...", 50)
+term.setCursorPos(23,5)
+term.write("Passed")
+term.setCursorPos(1, 7)
+term.write("Physical Drives")
+term.setCursorPos(1,8)
+term.write("---------------")
+
+for i = 1,6 do
+	sleep(0.2)
+	if peripheral.isPresent(sidesList[i]) then
+		if peripheral.getType(sidesList[i]) == "modem" then
+			modemExists = true
+			modemSide = sidesList[i]
+		elseif  peripheral.getType(sidesList[i]) == "drive" then
+			mountName = "[EMPTY]"
+			if disk.isPresent(sidesList[i]) then
+				mountName = disk.getMountPath(sidesList[i])
+			end
+			if driveCount > 1 then
+				term.setCursorPos(1,(8+driveCount))
+				term.write("Disk Drive: "..mountName.." - Connected ("..sidesList[i]..")")
+			else 
+				term.setCursorPos(1,(8+driveCount))
+				term.write("Bootable Disk Drive: "..mountName.." - Connected ("..sidesList[i]..")")
+				bootDrive = sidesList[i]
+				bootDriveExists = true
+			end
+			driveCount = driveCount + 1
+		end
+	end
+end
+sleep(0.1)
+if modemExists then
+	term.setCursorPos(1,17)
+	clientId = os.computerID()
+	print("Modem connected ("..modemSide.."). IP: ", clientId)
+else
+	term.setCursorPos(1,17)
+	print("Warning! No modem connected.")
+end
+sleep(0.5)
+term.setCursorPos(1,18)
+print("Booting [                                        ]")
+sleep(0.1)
+term.setCursorPos(1,18)
+print("Booting [###############################         ]")
+sleep(0.2)
+term.setCursorPos(1,18)
+print("Booting [########################################]")
+sleep(0.1)
+
+if bootDriveExists and disk.isPresent(bootDrive) then
+	mountName = disk.getMountPath(bootDrive).."/autoexec"
+	if fs.exists(mountName) then
+		bootableDisk = true
+	end
+end
+
+-- Launch Boot Manager                                  --
+readBootOptions()
+
+-- Draw Boot Manager GUI Interface                      --
+local bootOptLen = table.getn(bootOpt)
+while true do
+	term.setBackgroundColor(colors.black)
+	term.clear()
+	term.setCursorPos(1,1)
+	term.setBackgroundColor(colors.white)
+	term.setTextColor(colors.black)
+	term.write(string.rep(" ", x))
+	centerText("Boot Manager", 1)
+	term.setCursorPos(3,3)
+	term.setBackgroundColor(colors.black)
+	term.setTextColor(colors.white)
+	write("Please select the operating system to start:")
+	for i=1,bootOptLen do
+		local str = "Option"
+		local nameLen = string.len(bootOpt[i].name)
+		local addspaces = labLen - tonumber(nameLen)
+		if addspaces >= 0 then
+			str = i.." "..bootOpt[i].name
+			str = str..string.rep(" ", addspaces)
+		else
+			str = string.sub(bootOpt[i].name, 1, labLen)
+		end
+		if i == slc then
+			term.setBackgroundColor(colors.white)
+			term.setTextColor(colors.black)
+			term.setCursorPos(5,(i+4))
+			write(str)
+		else 
+			term.setBackgroundColor(colors.black)
+			term.setTextColor(colors.white)
+			term.setCursorPos(5,(i+4))
+			write(str)
+		end
+	end
+	term.setBackgroundColor(colors.black)
+	term.setTextColor(colors.white)
+	term.setCursorPos(3, (bootOptLen + 6))
+	write("Use the UP and DOWN arrow keys to select your")
+	term.setCursorPos(3, (bootOptLen + 7))
+	write("boot option. Press ENTER to Choose.")
+	term.setCursorPos(3, (y-2))
+	write("Press F5 to reboot or DEL to shutdown system.")
+	term.setCursorPos(3, (y-1))
+	local event, p1, p2 = os.pullEvent()
+	if event == "key" then 
+		if p1 == keys.up and slc > 1 then slc=slc-1
+		elseif p1 == keys.down and slc < bootOptLen then slc=slc+1
+		elseif p1 == keys.enter then
+			local args = { }
+			bootOptcmd = bootOpt[slc].dir
+			if bootOpt[slc].args ~= null then
+				args = split(bootOpt[slc].args, ",")
+				for a=1,table.getn(args) do
+					bootOptcmd = bootOptcmd.." "..args[a]
+				end
+			end	
+			shell.run(bootOptcmd)
+			sleep(1)
+		elseif p1 == keys.f5 then
+		    os.reboot()
+		elseif p1 == keys.delete then
+		    os.shutdown()
+		end
+	end
+end

@@ -1,0 +1,202 @@
+-- ElectronousOS v3.0b Basic Login Screen               -- 
+-- Developed by DomanoSV and Spook811                   --
+-- Copyright DKE Domain 2014 - 2015                     --
+
+-- This is the ElectronousOS Basic startup splash and   --
+-- login screen, this will be written to work with      --
+-- normal computers only. It will have many of the same --
+-- functions as the version of ElectronousOS standard   --
+-- for and advanced computer. The only difference       --
+-- between the 2 will be the interface.     ~DomanoSV   --
+
+-- Local Variables                                      --
+local x,y = term.getSize()
+local menuItems = { { item = "Login", func = 1 },  { item = "Network Login", func = 2 }, { item = "Restart", func = 3 }, { item = "Shutdown", func = 4 } }
+local userData = { }
+local slc = 1
+local labLen = 14
+local startLine = 12
+local PDCServer = nil
+local netLoginEnabled = false
+local attempted_login = true
+local userDataDir = "/etc/passwd"
+local loginDir = "/home"
+
+-- Load in API                                          --
+os.loadAPI("/lib/libcore")
+
+-- Local Functions                                      --
+local function runDesktop(side, uname, dir)
+	shell.run("/bin/desktop", side, uname, dir)
+
+end
+
+local function runClock()
+	shell.run("/bin/sysclock")
+end
+
+-- Draws the splash screen                              --
+local function drawSplashScreen()
+	local logo = { "     _______", "    / ___/_/", "   / //__   ", "  / __/_/   ", " / //____   ", "/_____/_/   " } 
+	local logostr = "ElectronusOS"
+	local logoHeight = table.getn(logo)
+	term.setBackgroundColor(colors.black)
+	term.clear()
+	term.setCursorPos(1,1)
+	term.setBackgroundColor(colors.white)
+	term.write(string.rep(" ", x))
+	term.setCursorPos(1,19)
+	term.write(string.rep(" ", x))
+	term.setBackgroundColor(colors.black)
+	term.setTextColor(colors.white)
+	for i=1,logoHeight do
+		libcore.centerText(logo[i], (i + 3))
+	end
+	libcore.centerText(logostr, (logoHeight + 4))
+	startLine = logoHeight + 6
+end
+
+-- Creates the menu options list you see                --
+local function createMenuItems()
+	if netLoginEnabled ~= true then
+		table.remove(menuItems, 2)
+	end
+end
+
+-- looks for a network login server and returns the IP, --
+-- if successful.                                       --
+local function lookupPDCsrv()
+	local modemExists, modemSide = libcore.modemScan()
+	if modemExists then
+		rednet.open(modemSide)
+		rednet.broadcast("TE89u2XPns")
+		local id, msg = rednet.receive(0.5)
+		if id ~= nil and msg == "hccwC900IS" then
+			return true, id
+		end
+	end
+end
+
+-- Sets Cursor at the beginning of centred text.        --
+local function cursorOnCenterText(strLen)
+	xPos = math.ceil((x / 2) - (tonumber(strLen) / 2))
+	return xPos
+end
+
+-- Start ElectronousOS                                  --
+drawSplashScreen()
+local loadBarWidth = 14
+term.setCursorPos(1,startLine)
+term.setBackgroundColor(colors.black)
+term.setTextColor(colors.white)
+libcore.centerText("   Loading...   ",startLine)
+libcore.centerText("[              ]",startLine+1)
+term.setCursorPos(cursorOnCenterText(loadBarWidth),startLine+1)
+textutils.slowPrint(string.rep("L", loadBarWidth), 50)
+userData = libcore.readUserDatabase(userDataDir)
+netLoginEnabled, PDCServer = lookupPDCsrv()
+createMenuItems()
+local menuLen = table.getn(menuItems)
+
+-- Do login screen here                                 --
+while true do
+	attempted_login = false
+	drawSplashScreen()
+	libcore.centerText("What would you like to do today?", startLine)
+	for i=1,#menuItems do
+		local str = "Option"
+		local nameLen = string.len(menuItems[i].item)
+		local addspaces = labLen - tonumber(nameLen)
+		if addspaces >= 0 then
+			str = menuItems[i].item..string.rep(" ", addspaces)
+		else
+			str = string.sub(menuItems[i].item, 1, labLen)
+		end
+		if slc == i then
+			term.setBackgroundColor(colors.white)
+			term.setTextColor(colors.black)
+			libcore.centerText(str, (startLine + i))
+		else 
+			term.setBackgroundColor(colors.black)
+			term.setTextColor(colors.white)
+			libcore.centerText(str, (startLine + i))
+		end	
+	end
+
+-- Sorts out key presses                                --
+	local event, p1, p2 = os.pullEvent()
+	if event == "key" then 
+		if p1 == keys.up and slc > 1 then slc=slc-1
+		elseif p1 == keys.down and slc < menuLen then slc=slc+1
+		elseif p1 == keys.enter then
+			slcOpt = tonumber(menuItems[slc].func)
+			print("enter")
+			if slcOpt == 1 or slcOpt == 2 then
+				local usrBoxLen = 12
+				local pwdBoxLen = 12
+				local accessGranted = false
+				drawSplashScreen()
+				attempted_login = true
+				libcore.centerText("Please login ...", startLine)
+				libcore.centerText("Username:     ", startLine+2)
+				libcore.centerText("[            ]", startLine+3)
+				term.setCursorPos(cursorOnCenterText(usrBoxLen),startLine+3)
+				term.setCursorBlink(true)
+				local username = read()
+				libcore.centerText("Password:     ", startLine+2)
+				libcore.centerText("[            ]", startLine+3)
+				term.setCursorPos(cursorOnCenterText(pwdBoxLen), startLine+3)
+				local password = read("*")
+				term.setCursorBlink(false)
+				if netLoginEnabled and slcOpt == 2 then
+					rednet.send(PDCServer, "7Cc0SeRovq"..username)
+					senderId, message, distance = rednet.receive(1)
+					loginDir = "/home/"..username
+					if password == message then
+						accessGranted = true
+						rednet.send(PDCServer, "1y4nT79gcn") 
+						runDesktop("back", username, loginDir)
+					else
+						accessGranted = false
+						drawSplashScreen()
+						libcore.centerText("Wrong username and/or password has", startLine)
+						libcore.centerText("been entered. Please try again ...", startLine+1)
+						sleep(5)
+					end
+				else
+					local passwd = ""
+					local validUser = false
+					for i=1,table.getn(userData) do
+						if userData[i].usr == username then
+							validUser = true
+							passwd = userData[i].pwd
+							break
+						else
+							validUser = false
+						end
+					end
+					if validUser and password == passwd then
+						accessGranted = true
+						if username == "root" then
+							loginDir = "/root"
+						else
+							loginDir = "/home/"..username
+						end
+						runDesktop("back", username, loginDir)
+						shell.run("cd", "/")
+					else
+						accessGranted = false
+						drawSplashScreen()
+						libcore.centerText("Wrong username and/or password has", startLine)
+						libcore.centerText("been entered. Please try again ...", startLine+1)
+						sleep(5)
+					end
+				end
+			elseif slcOpt == 3 then
+				os.reboot()
+			elseif slcOpt == 4 then
+				os.shutdown()
+			end
+		end
+	end
+end

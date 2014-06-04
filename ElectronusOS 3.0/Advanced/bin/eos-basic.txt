@@ -1,0 +1,8 @@
+-- ElectronousOS v3.0b Basic -- 
+-- Developed by DomanoSV and Spook811 --
+-- Copyright DKE Domain 2014 - 2015 --
+
+-- This OS is specifically targeted at a normal ComputerCraft --
+-- terminal. As it has no mouse_click function this version   --
+-- will have a basic menu which can be scrolled through using --
+-- the arrow keys, then press enter to launch an application. --

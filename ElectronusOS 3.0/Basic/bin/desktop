@@ -1,0 +1,268 @@
+-- ElectronousOS v3.0b Basic Desktop                    -- 
+-- Developed by DomanoSV and Spook811                   --
+-- Copyright DKE Domain 2014 - 2015                     --
+
+-- This is the ElectronousOS Basic Desktop, it is       --
+-- written to work only with normal computers. To use   --
+-- it, press up and down keys to select a option then   --
+-- press enter to confirm.                  ~DomanoSV   --
+
+-- Local Variables                                      --
+tArgs = {...}
+local modemSide,username,dir = tArgs[1],tArgs[2],tArgs[3]
+local menuItems = { { item = "Applications >", func = 1, page = 1 }, 
+                    { item = "Games        >", func = 2, page = 1 }, 
+					{ item = "Email Client", func = 3, page = 1 }, 
+					{ item = "File Manager", func = 4, page = 1 }, 
+					{ item = "Open Terminal", func = 5, page = 1 },
+					{ item = "[SPACER]", func = 0, page = 1 },
+					{ item = "Settings", func = 6, page = 1 }, 
+					{ item = "Chat", func = 10, page = 2 }, 
+					{ item = "Adventure", func = 12, page = 3 }, 
+					{ item = "Worm", func = 13, page = 3 }, 
+					{ item = "[SPACER]", func = 0, page = 1 },
+					{ item = "[SPACER]", func = 0, page = 2 },
+					{ item = "[SPACER]", func = 0, page = 3 },
+					{ item = "Logout", func = 7, page = 1 }, 
+					{ item = "Restart", func = 8, page = 1 }, 
+					{ item = "Shutdown", func = 9, page = 1 },
+					{ item = "< Back", func = 11, page = 2 },
+					{ item = "< Back", func = 14, page = 3 }
+				  }
+local menuItemLen = 14 
+local slc = 1
+local page = 1
+local x,y = term.getSize()
+local center = math.ceil((x / 2) - (12 / 2))
+local startLine = 12
+local time = "00:00"
+
+-- Load in API                                          --
+os.loadAPI("/lib/libcore")
+
+-- Local Functions                                      --
+-- Draws the splash screen                              --
+local function drawSplashScreen()
+	local logo = { "     _______", "    / ___/_/", "   / //__   ", "  / __/_/   ", " / //____   ", "/_____/_/   " } 
+	local logostr = "ElectronusOS"
+	local logoHeight = table.getn(logo)
+	term.setBackgroundColor(colors.black)
+	term.clear()
+	term.setCursorPos(1,1)
+	term.setBackgroundColor(colors.white)
+	term.write(string.rep(" ", x))
+	term.setCursorPos(1,19)
+	term.write(string.rep(" ", x))
+	term.setBackgroundColor(colors.black)
+	term.setTextColor(colors.white)
+	for i=1,logoHeight do
+		libcore.centerText(logo[i], (i + 3))
+	end
+	libcore.centerText(logostr, (logoHeight + 4))
+	startLine = logoHeight + 6
+end
+
+-- This is the ElectronousOS Clock it syncs with a time --
+-- and adjusts the time accordingly to what you have    --
+-- set. It then saves the time string to file to be     --
+-- called on later.                         ~DomanoSV   --
+
+local function getTime(timeAdj, strFormat)
+	local response = http.get("http://www.dkedomain.com/srvtime.php?zone=custom&t="..timeAdj.."&f="..strFormat)	
+	if response then
+		local sResponse = response.readAll()
+		response.close()
+		local file = fs.open("/tmp/time.tmp", "w")
+		file.write(sResponse)
+		file.close()
+		print(sResponse)
+	else
+		time = "00:00"
+		local file = fs.open("/tmp/time.tmp", "w")
+		file.write(time)
+		file.close()
+	end	
+end
+
+-- Get Menu Items and put them into an array.           --
+function getMenu(page)
+	local t = { }
+	local c = 0
+	for i=1,#menuItems do
+		if menuItems[i].page == page then
+			table.insert(t, {
+				item = menuItems[i].item, 
+				func = menuItems[i].func
+				})
+			if menuItems[i].item ~= "[SPACER]" then
+				c = c + 1
+			end
+		end
+	end
+	return t, c
+end
+
+-- Draw ElectronousOS Basic desktop environment.        --
+local t,f,type = libcore.getTimeSets()
+local timer = os.startTimer(0)
+local timer2 = os.startTimer(0)
+while true do
+	local menuList, menuLen = getMenu(page)
+	local pol = 1
+	term.setBackgroundColor(colors.black)
+	term.clear()
+	term.setCursorPos(1,1)
+	term.setTextColor(colors.white)
+	term.write(string.rep(" ", x))
+	libcore.centerText("Welcome to ElectronusOS", 1)
+	term.setCursorPos(1,2)
+	term.setBackgroundColor(colors.white)
+	term.setTextColor(colors.black)
+	term.write(string.rep(" ", x))
+	term.setCursorPos(1,2)
+	term.write(" Hello, "..username.."!")
+	local time = os.time()
+	if type == "MC" then
+		timeFmt = textutils.formatTime(time, false)
+	elseif type == "RT" then
+		timeFmt =  "RT: "..libcore.getClock().." MC: "..textutils.formatTime(time, false)
+	else
+		timeFmt = textutils.formatTime(time, false)
+	end
+	timeLen = string.len(timeFmt)
+	term.setCursorPos(x-timeLen,2)
+	term.write(timeFmt)
+	term.setBackgroundColor(colors.black)
+	term.setTextColor(colors.white)
+	libcore.centerText("Select Option:", 4)
+	for i=1,menuLen do
+		if i > table.getn(menuList) then break end
+		if menuList[i].item == "[SPACER]" then
+			pol = pol + 1
+			table.remove(menuList, i)
+		end
+		local str = menuList[i].item
+		local nameLen = string.len(str)
+		local addspaces = menuItemLen - tonumber(nameLen)
+		if addspaces >= 0 then
+			str = str..string.rep(" ", addspaces)
+		else
+			str = string.sub(str, 1, menuItemLen)
+		end
+		if slc == i then
+			term.setBackgroundColor(colors.white)
+			term.setTextColor(colors.black)
+			libcore.centerText(str, (5 + pol))
+		else 
+			term.setBackgroundColor(colors.black)
+			term.setTextColor(colors.white)
+			libcore.centerText(str, (5 + pol))
+		end
+		pol = pol + 1
+	end
+	term.setCursorPos(1,18)
+	term.setBackgroundColor(colors.black)
+	term.setTextColor(colors.white)
+
+    if fs.exists(dir) and fs.isDir(dir) then
+    else
+     fs.makeDir(dir)
+    end
+
+    print("Documents: "..dir)
+    shell.run("cd", "/"..dir)
+
+	term.setCursorPos(1,19)
+	term.setBackgroundColor(colors.white)
+	term.setTextColor(colors.black)
+	term.write(string.rep(" ", x))
+	libcore.centerText("UP/ DOWN to Select, ENTER to Confirm", 19)
+	term.setBackgroundColor(colors.black)
+	term.setTextColor(colors.white)
+	term.setCursorPos(1,16)
+	local event, p1, p2 = os.pullEvent()
+	if event == "key" then 
+		if p1 == keys.up and slc > 1 then slc=slc-1
+		elseif p1 == keys.down and slc < menuLen then slc=slc+1
+		elseif p1 == keys.enter or p1 == keys.space then
+			local func = menuList[slc].func
+			if func == 1 then
+				page = 2
+				slc = 1
+			elseif func == 2 then
+				page = 3
+				slc = 1
+			elseif func == 3 then
+				shell.run("/bin/mailclient", modemSide, username)
+				timer2 = os.startTimer(30)
+				timer = os.startTimer(0.1)
+			elseif func == 4 then
+				shell.run("/bin/filemanager", username, dir)
+				timer2 = os.startTimer(30)
+				timer = os.startTimer(0.1)
+				shell.run("cd", dir)
+			elseif func == 5 then
+				term.setBackgroundColor(colors.black)
+				term.setTextColor(colors.white)
+				term.clear()
+				term.setCursorPos(1,1)
+				print("To return to ElectronusOS, type: exit")
+				print(string.rep("-", x))
+				term.setBackgroundColor(colors.black)
+				term.setTextColor(colors.white)
+				shell.run("shell")
+				timer2 = os.startTimer(30)
+				timer = os.startTimer(0.1)
+			elseif func == 6 then
+			
+			elseif slc == 7 then
+				drawSplashScreen()
+				centerText("You are being logged out, please wait...", startLine)
+				shell.run("cd", "/")
+				sleep(2)
+				break
+			elseif slc == 8 then
+				drawSplashScreen()
+				centerText("ElectronusOS is restarting, please wait...", startLine)
+				sleep(2)
+				os.reboot()
+			elseif slc == 9 then
+				drawSplashScreen()
+				centerText("ElectronusOS is shutting down, please wait...", startLine)
+				sleep(2)
+				os.shutdown()
+			elseif func == 10 then
+	
+			elseif func == 12 then
+				term.setBackgroundColor(colors.black)
+				term.setTextColor(colors.white)
+				term.clear()
+				term.setCursorPos(1,1)
+				shell.run("adventure")
+				term.setCursorBlink(false)
+				timer2 = os.startTimer(30)
+				timer = os.startTimer(0.1)
+			elseif func == 13 then
+				term.setBackgroundColor(colors.black)
+				term.setTextColor(colors.white)
+				shell.run("worm")
+				timer2 = os.startTimer(30)
+				timer = os.startTimer(0.1)
+			elseif func == 11 or func == 14 then
+				page = 1
+				slc = 1
+			else
+				print("Unknown command!")
+				sleep(2)
+			end
+		end
+	end
+	if event == "timer" and p1 == timer then
+		timer = os.startTimer(0.1)
+	end
+	if event == "timer" and p1 == timer2 then
+		getTime(t,f)
+		timer2 = os.startTimer(30)
+		timer = os.startTimer(0.1)
+	end
+end

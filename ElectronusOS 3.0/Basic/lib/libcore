@@ -1,0 +1,90 @@
+-- ElectronousOS Core Library of Functions --
+-- Developed by DomanoSV and Spook811 --
+-- Copyright DKE Domain 2014 - 2015 --
+
+-- GUI Functions      --
+-- Print Centred Text --
+function centerText(text, line)
+ x,y = term.getSize()
+ term.setCursorPos(math.ceil((x / 2) - (text:len() / 2)), line)
+ term.write(text)
+end
+
+-- Get time settings                                    --
+function getTimeSets()
+	if not fs.exists("/etc/sysconf/time.conf") then return end
+	local file = io.open("/etc/sysconf/time.conf", "r")
+	local timeSettings = { "36000", "12", "MC"}
+	local lineNumb = 1
+	for line in file:lines()do
+		table.insert(timeSettings, lineNumb, line)
+		lineNumb = lineNumb + 1
+	end
+	file:close()
+	return timeSettings[1], timeSettings[2], timeSettings[3]
+end
+
+-- Gets time string                                     --
+function getClock()
+	if not fs.exists("/tmp/time.tmp") then return "00:00" end
+	local file = io.open("/tmp/time.tmp", "r")
+	local line = file:read()
+	file:close()
+	return line
+end
+
+-- String Functions      --
+-- Split String Function --
+function split(str, pattern)
+  local t = { }
+  local fpat = "(.-)" .. pattern
+  local last_end = 1
+  local s, e, cap = str:find(fpat, 1)
+  while s do
+    if s ~= 1 or cap ~= "" then
+      table.insert(t,cap)
+    end
+    last_end = e+1
+    s, e, cap = str:find(fpat, last_end)
+  end
+  if last_end <= #str then
+    cap = str:sub(last_end)
+    table.insert(t, cap)
+  end
+  return t
+end
+
+-- Peripheral Functions    -- 
+-- Scan for modem function --
+function modemScan()
+	local sides = { "left", "right", "top", "bottom", "front", "back" }
+	for i = 1,6 do
+		if peripheral.isPresent(sides[i]) then
+			if peripheral.getType(sides[i]) == "modem" then
+				return true, sides[i]
+			end
+		end
+	end
+end
+
+-- Authentication Functions                             --
+-- Get user database from file on disk                  --
+function readUserDatabase(fileDir)
+  if not fs.exists(fileDir) then return end
+  local userData = { }
+  local file = io.open(fileDir, "r")
+  local fullstr = ""
+  local fline = file:read()
+  while fline do
+    fullstr = fullstr..fline
+    fline = file:read()
+  end  
+  file:close()
+  local t = split(fullstr, ":@:")
+  for i=1,#t,2 do
+    table.insert(userData, {
+      usr = t[i],
+      pwd = t[i+1] })
+  end
+  return userData
+end
