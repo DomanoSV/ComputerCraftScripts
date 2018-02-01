@@ -1,0 +1,22 @@
+{
+  {
+    location = "/boot/kernel back",
+    name = "ElectronusOS",
+  },
+  {
+    location = "/bin/updater",
+    name = "ElectronusUpdate",
+  },
+  {
+    location = "shell",
+    name = "CraftOS",
+  },
+  {
+    location = "disk7/autoexec",
+    name = "bootDisk",
+  },
+  {
+    location = "disk8/autoexec",
+    name = "disk8",
+  },
+}

@@ -1,0 +1,811 @@
+-- Electronus OS 3.0 Settings --
+
+-- Electronus OS 3.0 Settings --
+
+-- Copyright DKE Domain 2014 - 2015 --
+
+
+
+-- Startup --
+
+
+
+userConfTable = {}
+
+sysVerTable = {}
+
+
+
+eosV = "Electronus OS Pre-Alpha 3.0"
+
+guiV = "Y11 v1.0"
+
+biosV = "BIOS v2.0"
+
+
+
+term.clear()
+
+x, y = term.getSize()
+
+ip = os.getComputerID()
+
+
+
+function mainWin()
+
+	local win = window.create(term.current(), 1, 1, 51, 19)
+
+	win.setBackgroundColor(colors.white)
+
+	win.clear()
+
+	
+
+	paintutils.drawLine(1, 1, 51, 1, colorsB)
+
+	win.setCursorPos(2, 1)
+
+	win.setTextColor(colorsT)
+
+	write("Settings")
+
+	paintutils.drawLine(49, 1, 50, 1, colors.red)
+
+	paintutils.drawLine(15, 2, 15, 19, colors.lightGray)
+
+	
+
+	term.setBackgroundColor(colors.white)
+
+	win.setTextColor(colors.gray)
+
+	win.setCursorPos(2, 4)
+
+	write("Updates")
+
+
+
+	win.setCursorPos(2, 7)
+
+	write("Scheme")
+
+	
+
+	win.setCursorPos(2, 10)
+
+	write("Account")
+
+	
+
+	win.setCursorPos(2, 13)
+
+	write("Time & Date")
+
+	
+
+	win.setCursorPos(2, 16)
+
+	write("Menus")
+
+end
+
+
+
+-- Windows --
+
+
+
+function sysInfoWin()
+
+	local win = window.create(term.current(), 16, 2, 37, 18)
+
+	win.setBackgroundColor(colors.white)
+
+	win.clear()
+
+	
+
+	win.setTextColor(colors.gray)
+
+	win.setCursorPos(3, 3)
+
+	write("System Information")
+
+	
+
+	win.setCursorPos(4, 5)
+
+	write("OS: "..eosV)
+
+	win.setCursorPos(4, 6)
+
+	write("GUI: "..guiV)
+
+	win.setCursorPos(4, 7)
+
+	write("BIOS: "..biosV)
+
+	
+
+	win.setCursorPos(4, 9)
+
+	write("User: "..user)
+
+	win.setCursorPos(4, 10)
+
+	write("IP: "..ip)
+
+	win.setCursorPos(4, 11)
+
+	
+
+	
+
+	local icon = paintutils.loadImage("/bin/sysIcons/eosIcon")
+
+	paintutils.drawImage(icon, 25, 14)
+
+end
+
+
+
+function updatesWin()
+
+	local win = window.create(term.current(), 16, 2, 37, 18)
+
+	win.setBackgroundColor(colors.white)
+
+	win.clear()
+
+	
+
+	win.setTextColor(colors.gray)
+
+	win.setCursorPos(3,3)
+
+	write("System Updates")
+
+	-- Add animation & actually check... --
+
+	checking()
+
+end
+
+
+
+function schemeWin()
+
+	local win = window.create(term.current(), 16, 2, 37, 18)
+
+	win.setBackgroundColor(colors.white)
+
+	win.clear()
+
+	
+
+	win.setTextColor(colors.gray)
+
+	win.setCursorPos(3,3)
+
+	write("Personalisation")
+
+	
+
+	win.setCursorPos(4,6)
+
+	write("Bar Color")
+
+	
+
+	win.setCursorPos(4,8)
+
+	write("Text Color")
+
+	
+
+	win.setCursorPos(4,10)
+
+	write("Highlight Color")
+
+	
+
+	paintutils.drawLine(45, 7, 47, 7, colors.lightGray)
+
+	win.setTextColor(colors.white)
+
+	win.setCursorPos(31, 6)
+
+	write("\\/")
+
+	paintutils.drawLine(40, 7, 45, 7, colorsB)
+
+	
+
+	paintutils.drawLine(45, 9, 47, 9, colors.lightGray)
+
+	win.setTextColor(colors.white)
+
+	win.setCursorPos(31, 8)
+
+	write("\\/")
+
+	paintutils.drawLine(40, 9, 45, 9, colorsT)
+
+	
+
+	paintutils.drawLine(45, 11, 47, 11, colors.lightGray)
+
+	win.setTextColor(colors.white)
+
+	win.setCursorPos(31, 10)
+
+	write("\\/")
+
+	paintutils.drawLine(40, 11, 45, 11, colorsH)
+
+	
+
+	paintutils.drawLine(41, 18, 47, 18, colors.lightGray)
+
+	win.setTextColor(colors.white)
+
+	win.setCursorPos(27, 17)
+
+	write("Apply")
+
+	
+
+	
+
+end
+
+
+
+function accountWin()
+
+	local win = window.create(term.current(), 16, 2, 37, 18)
+
+	win.setBackgroundColor(colors.white)
+
+	win.clear()
+
+end
+
+
+
+function timedateWin()
+
+	local win = window.create(term.current(), 16, 2, 37, 18)
+
+	win.setBackgroundColor(colors.white)
+
+	win.clear()
+
+end
+
+
+
+function menusWin()
+
+	local win = window.create(term.current(), 16, 2, 37, 18)
+
+	win.setBackgroundColor(colors.white)
+
+	win.clear()
+
+end
+
+
+
+-- Functions --
+
+
+
+function split(str, pat)
+
+	local t = { }
+
+	local fpat = "(.-)"..pat
+
+	local last_end = 1
+
+	local s, e, cap = str:find(fpat, 1)
+
+	while s do
+
+		if s ~= 1 or cap ~= "" then
+
+			table.insert(t,cap)
+
+		end
+
+		last_end = e+1
+
+		s, e, cap = str:find(fpat, last_end)
+
+	end
+
+	if last_end <= #str then
+
+		cap = str:sub(last_end)
+
+		table.insert(t, cap)
+
+	end
+
+	return t
+
+end
+
+
+
+-- Read & Write .conf --
+
+
+
+function readUserConf()
+
+	if not fs.exists(shell.resolve(".").."/home/userConf") then return end
+
+	local file = io.open(shell.resolve(".").."/home/userConf", "r")
+
+	for line in file:lines()do
+
+		table.insert(userConfTable, tonumber(line))
+
+	end
+
+	file:close()
+
+end
+
+
+
+function writeUserConf()
+
+	local file = io.open(shell.resolve(".").."/home/userConf", "w")
+
+	file:writeLine(changestr, cm)
+
+	file:close()
+
+end
+
+ 
+
+function readSysVer()
+
+	if not fs.exists(shell.resolve(".").."/etc/sysVer") then return end
+
+	local file = io.open(shell.resolve(".").."/etc/sysVer", "r")
+
+	for line in file:lines()do
+
+		table.insert(userConfTable, tonumber(line))
+
+	end
+
+	file:close()
+
+end
+
+
+
+function writeSysVer()
+
+	local file = io.open(shell.resolve(".").."/etc/sysVer", "w")
+
+	file:writeLine(changestr, prog)
+
+	file:close()
+
+end
+
+
+
+function checking()
+
+	term.setBackgroundColor(colors.white)
+
+	term.setTextColor(colors.gray)
+
+	term.setCursorPos(19,6)
+
+	write("Checking   ")
+
+	sleep(0.5)
+
+	term.setCursorPos(19,6)
+
+	write("Checking.  ")
+
+	sleep(0.5)
+
+	term.setCursorPos(19,6)
+
+	write("Checking.. ")
+
+	sleep(0.5)
+
+	term.setCursorPos(19,6)
+
+	write("Checking...")
+
+	sleep(0.5)
+
+end
+
+
+
+function marker()
+
+	paintutils.drawLine(15, 2, 15, 19, colors.lightGray)
+
+	local marker = window.create(term.current(), 15, markerPos, 1, 1)
+
+	marker.setBackgroundColor(colors.cyan)
+
+	marker.clear()
+
+end
+
+
+
+function colorSelector(posY, cm)
+
+	local win = window.create(term.current(), 40, posY, 6, 4)
+
+	win.setBackgroundColor(colors.white)
+
+	win.clear()
+
+	
+
+	win.setCursorPos(1,1)
+
+	term.setBackgroundColor(colors.black)
+
+	write(" ")
+
+	win.setCursorPos(2,1)
+
+	term.setBackgroundColor(colors.red)
+
+	write(" ")
+
+	win.setCursorPos(3,1)
+
+	term.setBackgroundColor(colors.green)
+
+	write(" ")
+
+	win.setCursorPos(4,1)
+
+	term.setBackgroundColor(colors.brown)
+
+	write(" ")
+
+	win.setCursorPos(5,1)
+
+	term.setBackgroundColor(colors.blue)
+
+	write(" ")
+
+	win.setCursorPos(6,1)
+
+	term.setBackgroundColor(colors.purple)
+
+	write(" ")
+
+	
+
+	win.setCursorPos(1,2)
+
+	term.setBackgroundColor(colors.pink)
+
+	write(" ")
+
+	win.setCursorPos(2,2)
+
+	term.setBackgroundColor(colors.lightGray)
+
+	write(" ")
+
+	win.setCursorPos(3,2)
+
+	term.setBackgroundColor(colors.gray)
+
+	write(" ")
+
+	win.setCursorPos(4,2)
+
+	term.setBackgroundColor(colors.white)
+
+	write(" ")
+
+	win.setCursorPos(5,2)
+
+	term.setBackgroundColor(colors.lime)
+
+	write(" ")
+
+	win.setCursorPos(6,2)
+
+	term.setBackgroundColor(colors.yellow)
+
+	write(" ")
+
+	
+
+	win.setCursorPos(1,3)
+
+	term.setBackgroundColor(colors.lightBlue)
+
+	write(" ")
+
+	win.setCursorPos(2,3)
+
+	term.setBackgroundColor(colors.magenta)
+
+	write(" ")
+
+	win.setCursorPos(3,3)
+
+	term.setBackgroundColor(colors.orange)
+
+	write(" ")
+
+	win.setCursorPos(4,3)
+
+	term.setBackgroundColor(colors.cyan)
+
+	write(" ")
+
+	
+
+	local event, p1, p2, p3 = os.pullEvent()
+
+		if event == "mouse_click" then
+
+			if p2 == 40 and p3 == posY then
+
+				newCol = colors.black
+
+				schemeWin()
+
+			elseif p2 == 41 and p3 == posY then
+
+				newCol = colors.red
+
+				schemeWin()
+
+			elseif p2 == 42 and p3 == posY then
+
+				newCol = colors.green
+
+				schemeWin()
+
+			elseif p2 == 43 and p3 == posY then
+
+				newCol = colors.brown
+
+				schemeWin()	
+
+			elseif p2 == 44 and p3 == posY then
+
+				newCol = colors.blue
+
+				schemeWin()
+
+			elseif p2 == 45 and p3 == posY then
+
+				newCol = colors.purple
+
+				schemeWin()
+
+			elseif p2 == 46 and p3 == posY then
+
+				newCol = colors.purple
+
+				schemeWin()
+
+			
+
+			elseif p2 == 41 and p3 == posY then
+
+				newCol = colors.pink
+
+				schemeWin()
+
+			elseif p2 == 42 and p3 == posY then
+
+				newCol = colors.lightGray
+
+				schemeWin()
+
+			elseif p2 == 43 and p3 == posY then
+
+				newCol = colors.gray
+
+				schemeWin()	
+
+			elseif p2 == 44 and p3 == posY then
+
+				newCol = colors.white
+
+				schemeWin()
+
+			elseif p2 == 45 and p3 == posY then
+
+				newCol = colors.lime
+
+				schemeWin()
+
+			elseif p2 == 46 and p3 == posY then
+
+				newCol = colors.yellow
+
+				schemeWin()
+
+				
+
+			elseif p2 == 41 and p3 == posY then
+
+				newCol = colors.lightBlue
+
+				schemeWin()
+
+			elseif p2 == 42 and p3 == posY then
+
+				newCol = colors.magenta
+
+				schemeWin()
+
+			elseif p2 == 43 and p3 == posY then
+
+				newCol = colors.orange
+
+				schemeWin()	
+
+			elseif p2 == 44 and p3 == posY then
+
+				newCol = colors.cyan
+
+				schemeWin()
+
+			else
+
+				schemeWin()
+
+			end
+
+		end	
+
+	changestr = newCol
+
+	writeUserConf()
+
+end
+
+
+
+-- Program --
+
+
+
+
+
+readUserConf()
+
+
+
+
+
+colorsB = userConfTable[2]
+
+term.clear()
+
+term.setCursorPos(1,1)
+
+print("1: ", userConfTable[1])
+
+print("2: ", userConfTable[2])
+
+print("3: ", userConfTable[3])
+
+sleep(5)
+
+colorsT = userConfTable[3]
+
+colorsH = userConfTable[4]
+
+
+
+mainWin()
+
+sysInfoWin()
+
+
+
+while true do
+
+	local event, p1, p2, p3 = os.pullEvent()
+
+		if event == "mouse_click" then
+
+			if p2 >= 49 and p2 <= 51 and p3 == 1 then
+
+				term.setBackgroundColour(colors.white)
+
+				shell.run("/bin/desktop", user)
+
+			elseif p2 >= 1 and p2 <= 14 and p3 == 4 then
+
+				updatesWin()
+
+				markerPos = 4
+
+				marker()
+
+			elseif p2 >= 1 and p2 <= 14 and p3 == 7 then
+
+				schemeWin()
+
+				markerPos = 7
+
+				marker()
+
+			elseif p2 >= 1 and p2 <= 14 and p3 == 10 then
+
+				accountWin()
+
+				markerPos = 10
+
+				marker()
+
+			elseif p2 >= 1 and p2 <= 14 and p3 == 13 then
+
+				timedateWin()
+
+				markerPos = 13
+
+				marker()
+
+			elseif p2 >= 1 and p2 <= 14 and p3 == 16 then
+
+				menusWin()
+
+				markerPos = 16
+
+				marker()
+
+			elseif p2 >= 40 and p2 <= 47 and p3 == 7 then
+
+				cm = 2
+
+				colorSelector(8, cm)
+
+			elseif p2 >= 40 and p2 <= 47 and p3 == 9 then
+
+				cm = 3
+
+				colorSelector(10, cm)
+
+			elseif p2 >= 40 and p2 <= 47 and p3 == 11 then
+
+				cm = 4
+
+				colorSelector(12, cm)
+
+			elseif p2 >= 41 and p2 <= 47 and p3 == 18 then
+
+				mainWin()
+
+				schemeWin()
+
+			end
+
+		end
+
+end

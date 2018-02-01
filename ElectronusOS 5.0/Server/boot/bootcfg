@@ -1,0 +1,14 @@
+{
+  {
+    location = "/boot/kernel back",
+    name = "ElectronusOS",
+  },
+  {
+    location = "/bin/updater",
+    name = "ElectronusUpdate",
+  },
+  {
+    location = "shell",
+    name = "CraftOS",
+  },
+}
