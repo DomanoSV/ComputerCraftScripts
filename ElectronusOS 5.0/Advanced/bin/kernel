@@ -1,3 +1,0 @@
-tArgs = {...}
-
-print("This is a test 1 2 3"..tostring(tArgs[1]))
