@@ -1,0 +1,301 @@
+-- Electronous Boot Manager v2.0                        --
+-- Developed by DomanoSV and Spook811                   --
+-- Copyright DKE Domain 2018	                        --
+
+-- This is the Electronus Boot Manager v2.0 it has been --
+-- designed and written to make it easier to customize  --
+-- yet keep a lot of functionality for both basic and   --
+-- advanced computers. It will also load into the boot  --
+-- list any disk drives that have floppy disks in them  --
+-- with a file called 'autoexec' The disk drives can    --
+-- either be connected directly to the computer or be   --
+-- connected via a wired modem network.                 --
+
+-- Variables					                        --
+
+local bootcfg = {}
+local splash = {}
+
+local bootcfgDir = "/boot/bootcfg"
+local slc = 1
+local scroll = 1
+local x,y = term.getSize()
+
+-- Functions					                        --
+
+local function centerText(text, line)
+	term.setCursorPos(math.ceil((x / 2) - (text:len() / 2)), line)
+	term.write(text)
+end
+
+local function loadBootcfg ()
+	file = io.open(bootcfgDir, "r")
+	data = file:read("*a")
+	file:close()
+	return textutils.unserialize(data)
+end
+
+local function loadSplash(colorScreen)
+	if colorScreen then
+		splash = paintutils.loadImage("/bin/dkeColor.splash")
+	else
+		file = io.open("/bin/dke.splash", "r")
+		data = file:read("*a")
+		file:close()
+		splash = textutils.unserialize(data)
+	end
+end
+
+local function drawSplash(xpos, ypos)
+	local colorScreen = term.isColor()
+	loadSplash(colorScreen)
+	
+	if colorScreen then
+		term.setBackgroundColor(colors.white)
+		term.clear()
+		paintutils.drawImage(splash, xpos, ypos)
+	else
+		term.setBackgroundColor(colors.black)
+		term.setTextColor(colors.white)
+		term.clear()
+		term.setBackgroundColor(colors.white)
+		term.setTextColor(colors.black)
+		for i,v in ipairs(splash) do
+			term.setCursorPos(v.x + xpos - 1, v.y + ypos - 1)
+			term.write(v.draw)
+		end
+	end
+end
+
+-- Main Program	                                        --									   
+
+function main()
+	bootcfg = loadBootcfg()
+	
+	drawSplash((x/2)-11, (y/2)-7)
+	
+	if term.isColor() then
+		term.setTextColor(colors.black)	
+		term.setBackgroundColor(colors.white)
+	else
+		term.setTextColor(colors.white)	
+		term.setBackgroundColor(colors.black)
+	end
+	
+	term.setCursorPos((x/2)+12,(y/2)+9)
+	print ("F10-Boot Menu")
+	
+-- Scan computer and network for bootable disk drives.  --
+	
+	devices = peripheral.getNames()
+	table.sort(devices)
+	
+	if devices ~= nil then
+		for i,v in ipairs(devices) do
+			if peripheral.getType(v) == "drive" then
+				if disk.isPresent(v) and disk.hasData(v) then
+					mountName = disk.getMountPath(v)
+					dir = mountName.."/autoexec"
+					if fs.exists(dir) and fs.isDir(dir) == false then
+						diskName = disk.getLabel(v) or mountName
+						table.insert(bootcfg, { location = dir, name = diskName})
+					end
+				end
+			end
+		end
+	end
+
+-- Start boot manager if F10 is pressed, if not wait 3  --
+-- seconds before booting the first boot option.	    --
+	
+	local t = 3
+	bootTimer = os.startTimer(1)
+	while true do
+		local event, a = os.pullEvent()
+		if event == "timer" and a == bootTimer then
+			t = t - 1
+			if t == 0 then break else bootTimer = os.startTimer(1) end
+		elseif event == "key" and a == 68 then
+			break
+		end
+	end
+	
+	if t == 0 then
+		term.setBackgroundColor(colors.black)
+		term.setTextColor(colors.white)
+		term.clear()
+		term.setCursorPos(1,1)
+		shell.run(bootcfg[1].location)
+	else
+		local bootcfglen = table.maxn(bootcfg)
+		
+		for i=0,10 do
+			drawSplash(((x/2)-11)-i, (y/2)-7)
+			sleep(0.01)
+		end
+		
+		while true do
+			drawSplash((x/2)-22, (y/2)-7)
+			if term.isColor() then
+				term.setTextColor(colors.white)	
+				term.setBackgroundColor(colors.blue)
+			else
+				term.setTextColor(colors.black)	
+				term.setBackgroundColor(colors.white)
+			end
+			term.setCursorPos((x/2)+4,(y/2)-8)
+			print ("      Boot Manager     ")
+			if term.isColor() then
+				term.setTextColor(colors.black)	
+				term.setBackgroundColor(colors.white)
+			else
+				term.setTextColor(colors.white)	
+				term.setBackgroundColor(colors.black)
+			end
+			term.setCursorPos((x/2)+5,(y/2)-6)
+			print ("Select boot option:")
+			term.setCursorPos((x/2)+5,(y/2)+5)
+			print ("Use UP and DOWN keys")
+			term.setCursorPos((x/2)+5,(y/2)+6)
+			print ("to select option.")
+			term.setCursorPos((x/2)+5,(y/2)+8)
+			print ("Press ENTER to Boot")
+			term.setCursorPos((x/2)+5,(y/2)+9)
+			print ("or F5 to Reboot.")
+			
+			if term.isColor() then
+				for i=1,8 do
+					term.setCursorPos((x/2)+6, ((y/2)-5)+i)
+					term.setBackgroundColor(colors.lightGray)
+					print(string.rep(" ", 19))
+				end
+			end
+			
+			for i=scroll,(7 + scroll) do
+				if i <= table.maxn(bootcfg) then
+					local name = ""
+					
+					if type(bootcfg[i].name) == "string" and bootcfg[i].name ~= nil then name = bootcfg[i].name or "Error!" end 
+					
+					local str = ""
+					local nameLen = string.len(name)
+					local addspaces = 18 - tonumber(nameLen)
+					
+					if scroll > 1 and i == scroll then
+						str = string.char(30)
+					elseif scroll < table.maxn(bootcfg) - 7 and i == 7 + scroll then
+						str = string.char(31)
+					else
+						str = " "
+					end
+					
+					if addspaces >= 0 then
+						str = str..name
+						str = str..string.rep(" ", addspaces)
+					else
+						str = str..string.sub(name, 1, 17)
+					end
+					
+					if i == slc then
+						if term.isColor() then
+							term.setTextColor(colors.black)	
+							term.setBackgroundColor(colors.blue)
+						else
+							term.setTextColor(colors.black)	
+							term.setBackgroundColor(colors.white)
+						end
+						term.setCursorPos((x/2)+6, ((y/2)-5)+1+(i-scroll))
+						write(str)
+					else 
+						if term.isColor() then
+							term.setTextColor(colors.black)	
+							term.setBackgroundColor(colors.lightGray)
+						else
+							term.setTextColor(colors.white)	
+							term.setBackgroundColor(colors.black)
+						end
+						term.setCursorPos((x/2)+6, ((y/2)-5)+1+(i-scroll))
+						write(str)
+					end
+				end
+			end
+			
+			local event, p1, p2 = os.pullEvent()
+			if event == "key" then 
+				if p1 == keys.up and slc > 1 then 
+					if slc == scroll then
+					 slc = slc - 1
+					 scroll = scroll - 1
+					else
+					 slc=slc-1
+					end
+				elseif p1 == keys.down and slc < bootcfglen then
+					if slc == (7 + scroll) then
+					 slc = slc + 1
+					 scroll = scroll + 1
+					else
+					 slc=slc+1
+					end
+				elseif p1 == keys.enter then
+					bootOptcmd = bootcfg[slc].location
+					if bootOptcmd ~= nil and type(bootOptcmd) == "string" then
+						term.setBackgroundColor(colors.black)
+						term.setTextColor(colors.white)
+						term.clear()
+						term.setCursorPos(1,1)
+						shell.run(bootOptcmd)
+					end	
+				elseif p1 == keys.f5 then
+					os.reboot()
+				elseif p1 == keys.delete then
+					os.shutdown()
+				end
+			end
+		end 
+	end
+end
+
+-- Error handling script, brings up a nice error screen --
+-- if startup fails.									--
+
+local ok, err = pcall(main)
+if not ok then
+  if term.isColor() then
+	term.setBackgroundColor(colors.blue)
+  else
+	term.setBackgroundColor(colors.black)
+  end
+  term.setTextColor(colors.white)
+  term.clear()
+  term.setCursorPos(1,1)
+  term.setBackgroundColor(colors.white)
+  if term.isColor() then
+	term.setTextColor(colors.blue)
+  else
+	term.setTextColor(colors.black)
+  end
+  centerText("  ElectronusOS  ", 3)
+  term.setTextColor(colors.white)
+  if term.isColor() then
+	term.setBackgroundColor(colors.blue)
+  else
+	term.setBackgroundColor(colors.black)
+  end
+  term.setCursorPos(1,6)
+  centerText("A problem has been detected and ElectronusOS",6)
+  centerText("has been shut down to prevent damage to",7)
+  centerText("your Computer",8)
+  print("")
+  print("")
+  errorStr = "Error Info: "..err
+  errorStr2 = ""
+  if string.len(errorStr) > 44 then
+  	errorStr2 = string.sub(errorStr, 45)
+	errorStr = string.sub(errorStr, 1, 44)
+  end
+  centerText(errorStr, 10)
+  centerText(errorStr2, 11)
+  centerText("Press any key to reboot", 18)
+  os.pullEvent("key")
+  os.reboot()
+end
