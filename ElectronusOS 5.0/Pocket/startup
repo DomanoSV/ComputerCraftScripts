@@ -121,20 +121,33 @@ if not ok then
 	term.setBackgroundColor(colors.black)
   end
   term.setCursorPos(1,6)
-  centerText("A problem has been detected and ElectronusOS",6)
-  centerText("has been shut down to prevent damage to",7)
-  centerText("your Computer",8)
+  centerText("A problem has been",6)
+  centerText("detected and Electronus",7)
+  centerText("has been shut down to",8)
+  centerText("prevent damage to your",9)
+  centerText("Pocket PC.",10)
   print("")
   print("")
   errorStr = "Error Info: "..err
   errorStr2 = ""
-  if string.len(errorStr) > 44 then
-  	errorStr2 = string.sub(errorStr, 45)
-	errorStr = string.sub(errorStr, 1, 44)
+  if string.len(errorStr) > 18 then
+    errorStr3 = string.sub(errorStr, 43)
+  	errorStr2 = string.sub(errorStr, 22, 42)
+	errorStr = string.sub(errorStr, 1, 21)
   end
-  centerText(errorStr, 10)
-  centerText(errorStr2, 11)
-  centerText("Press any key to reboot", 18)
-  os.pullEvent("key")
-  os.reboot()
+  centerText(errorStr, 12)
+  centerText(errorStr2, 13)
+  centerText(errorStr3, 14)
+  centerText("Press F10 for CraftOS", 17)
+  centerText("Press any key to Reboot", 18)
+  local event, key = os.pullEvent("key")
+  if key == 68 then
+    term.setBackgroundColor(colors.black)
+    term.setTextColor(colors.white)
+    term.clear()
+    term.setCursorPos(1,1)
+	shell.run("shell")
+  else
+    os.reboot()
+  end
 end
