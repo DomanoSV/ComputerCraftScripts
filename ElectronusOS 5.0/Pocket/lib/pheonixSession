@@ -1,0 +1,50 @@
+local userDatabase = {}
+
+os.loadAPI("/lib/sha256")
+
+function loadUsers(usrDataDIR)
+	file = io.open(usrDataDIR, "r")
+	data = file:read("*a")
+	file:close()
+	userDatabase = textutils.unserialize(data)
+	return true
+end
+
+function saveUsers(usrDataDIR)
+	file = io.open(usrDataDIR, "w")
+	file:write(textutils.serialize(userDatabase))
+	file:close()
+	return true
+end
+
+function addUser(username, password, isAdmin)
+	table.insert(userDatabase, { admin = isAdmin, user = username, password = sha256.sha256(password), sessionToken = "", sessionOpen = false, lastLogin = os.getComputerID()})
+	saveUsers("/etc/passwd")
+end
+
+function getToken()
+    str = ""
+    chars = {"0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"}
+    for i=1, 40 do str = str..chars[math.random(1, #chars)] end
+    return str
+end
+
+function validateToken(username, oldToken)
+	validToken = false
+	for i,v in ipairs(userDatabase) do
+		if v.sessionToken == oldToken and v.user == username then
+			validToken = true
+			break
+		end
+	end
+	return validToken
+end
+
+function updateToken(username, oldToken)
+	for i,v in ipairs(userDatabase) do
+		if v.sessionToken == oldToken and v.user == username then
+			v.sessionToken = getToken()
+			break
+		end
+	end
+end
