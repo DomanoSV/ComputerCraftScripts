@@ -1,0 +1,38 @@
+-- This is a file for describing what still needs to added to the Mining Program.
+--
+-- 1. Config setting:
+--      - shaft width in bays, which also defines how deep the entry tunnel goes.
+--          ie. the wider the shaft the deeper the entry tunnel. 3 Bays 
+--          would equal a shaft width of 30 blocks the entry tunnel would 
+--          then be around 15 blocks deep. This is to stop shafts that are 90 
+--          degrees from each other over lapping so to speak.
+--      - Shaft depth in bays, which also defines how many ore tunnels there 
+--        will be.
+--      - Mine shafts in up/down direction.
+--      - Number of shafts in set direction.
+--      - these settings once changed should the automatically change the way the
+--        mine is constructed, ie. no need to rewrite the program at all.
+--      Note: investigate the need to change building blocks and torches.
+--
+-- 2. Improve return to home function.. currently tunnels through newly placed 
+--    blocks which is really annoying.. this also means improving the return to
+--    postion function will need to be improved to avoid a similar outcome.
+--
+-- 3. Improve offload function.
+-- 
+-- 4. Improve the restock function adding Co-ords and facing direction for each
+--    item chest. ie. Cobble Stone  - x0, y0, z-1, f0
+--                    Torches       - x0, y0, z-1, f1 
+--                    unloadDir     - x0, y0, z-1, f2
+--                    fuel          - x0, y0, z-1, f3
+--                    Stone         - x0, y0, z1, f0
+--                    
+-- 5. Make functions for each turtle.dig direction that scans inventory space
+--    so the tutrle can return home before it gets full and unloads. Then 
+--    depending on what of the cycle restock with certain items that is needed
+--    to complete the task. Also add a loop the checks the block in the 
+--    direction was mined successful. ie. no gravel has dropped down. 
+--    Investigate whether this loop is better place in the move function before
+--    turtle moves.
+--
+-- 6. 
