@@ -476,6 +476,61 @@ buildMineCorner = function()
     moveBackward()
 end
 
+buildShaftWall = function(length, hasOreTunnels)
+
+    if not hasOreTunnels and not type(hasOreTunnels) == "boolean" then
+        hasOreTunnels = false -- Default value
+    end
+
+    for i=1,length do
+        moveForward()
+
+        turnLeft()
+
+        moveForward()
+        turtle.digUp()
+        turtle.digDown()
+
+        moveForward()
+        turtle.digUp()
+        turtle.digDown()
+
+        if (math.fmod(xPos, 4) == -2 or math.fmod(xPos, 4) == 2) or (math.fmod(yPos, 4) == -2 or math.fmod(yPos, 4) == 2) then
+            placeDownBlock("minecraft:stone")
+            placeUpBlock("minecraft:stone")
+            moveBackward()
+            placeBlock("minecraft:stone")
+
+            placeDownBlock("minecraft:stone")
+            placeUpBlock("minecraft:stone")
+            moveBackward()
+            placeBlock("minecraft:stone")
+        else
+
+            placeUpBlock("minecraft:cobblestone")
+
+            if hasOreTunnels then
+                if ((isFacing == 1 or isFacing == 3) and math.fmod(xPos, 4) ~= 0) or ((isFacing == 0 or isFacing == 2) and math.fmod(yPos, 4) ~= 0) then 
+                    placeDownBlock("minecraft:cobblestone")
+                    moveBackward()
+                    placeBlock("minecraft:cobblestone")
+                else
+                    moveBackward()
+                end
+            else 
+                placeDownBlock("minecraft:cobblestone")
+                moveBackward()
+                placeBlock("minecraft:cobblestone") 
+            end
+
+            moveBackward()
+
+        end
+
+        turnRight()
+    end
+end
+
 while true do
     local test = turtle.getFuelLevel()
     local solidBlockBelow = false
@@ -716,191 +771,31 @@ while true do
                     moveForward()
                 end
 
-                for i=1,(15 - 3) do
-                    moveForward()
-
-                    turnLeft()
-
-                    moveForward()
-                    turtle.digUp()
-                    turtle.digDown()
-
-                    moveForward()
-                    turtle.digUp()
-                    turtle.digDown()
-
-                    if (math.fmod(xPos, 4) == -2 or math.fmod(xPos, 4) == 2) or (math.fmod(yPos, 4) == -2 or math.fmod(yPos, 4) == 2) then
-                        placeDownBlock("minecraft:stone")
-                        placeUpBlock("minecraft:stone")
-                        moveBackward()
-                        placeBlock("minecraft:stone")
-
-                        placeDownBlock("minecraft:stone")
-                        placeUpBlock("minecraft:stone")
-                        moveBackward()
-                        placeBlock("minecraft:stone")
-                    else
-                        placeDownBlock("minecraft:cobblestone")
-                        placeUpBlock("minecraft:cobblestone")
-                        moveBackward()
-                        placeBlock("minecraft:cobblestone")
-                        moveBackward()
-                    end
-
-                    turnRight()
-                end
+                buildShaftWall(12)
 
                 buildMineCorner()
 
                 turnRight()
 
-                for i=1,61 do
-                    moveForward()
-
-                    turnLeft()
-
-                    moveForward()
-                    turtle.digUp()
-                    turtle.digDown()
-
-                    moveForward()
-                    turtle.digUp()
-                    turtle.digDown()
-
-                    if (math.fmod(xPos, 4) == -2 or math.fmod(xPos, 4) == 2) or (math.fmod(yPos, 4) == -2 or math.fmod(yPos, 4) == 2) then
-                        placeDownBlock("minecraft:stone")
-                        placeUpBlock("minecraft:stone")
-                        moveBackward()
-                        placeBlock("minecraft:stone")
-
-                        placeDownBlock("minecraft:stone")
-                        placeUpBlock("minecraft:stone")
-                        moveBackward()
-                        placeBlock("minecraft:stone")
-                    else
-                        placeDownBlock("minecraft:cobblestone")
-                        placeUpBlock("minecraft:cobblestone")
-                        moveBackward()
-                        placeBlock("minecraft:cobblestone")
-                        moveBackward()
-                    end
-
-                    turnRight()
-                end
+                buildShaftWall(61, true)
 
                 buildMineCorner()
 
                 turnRight()
 
-                for i=1,29 do
-                    moveForward()
-
-                    turnLeft()
-
-                    moveForward()
-                    turtle.digUp()
-                    turtle.digDown()
-
-                    moveForward()
-                    turtle.digUp()
-                    turtle.digDown()
-
-                    if (math.fmod(xPos, 4) == -2 or math.fmod(xPos, 4) == 2) or (math.fmod(yPos, 4) == -2 or math.fmod(yPos, 4) == 2) then
-                        placeDownBlock("minecraft:stone")
-                        placeUpBlock("minecraft:stone")
-                        moveBackward()
-                        placeBlock("minecraft:stone")
-
-                        placeDownBlock("minecraft:stone")
-                        placeUpBlock("minecraft:stone")
-                        moveBackward()
-                        placeBlock("minecraft:stone")
-                    else
-                        placeDownBlock("minecraft:cobblestone")
-                        placeUpBlock("minecraft:cobblestone")
-                        moveBackward()
-                        placeBlock("minecraft:cobblestone")
-                        moveBackward()
-                    end
-
-                    turnRight()
-                end
+                buildShaftWall(29)
 
                 buildMineCorner()
 
                 turnRight()
 
-                for i=1,61 do
-                    moveForward()
-
-                    turnLeft()
-
-                    moveForward()
-                    turtle.digUp()
-                    turtle.digDown()
-
-                    moveForward()
-                    turtle.digUp()
-                    turtle.digDown()
-
-                    if (math.fmod(xPos, 4) == -2 or math.fmod(xPos, 4) == 2) or (math.fmod(yPos, 4) == -2 or math.fmod(yPos, 4) == 2) then
-                        placeDownBlock("minecraft:stone")
-                        placeUpBlock("minecraft:stone")
-                        moveBackward()
-                        placeBlock("minecraft:stone")
-
-                        placeDownBlock("minecraft:stone")
-                        placeUpBlock("minecraft:stone")
-                        moveBackward()
-                        placeBlock("minecraft:stone")
-                    else
-                        placeDownBlock("minecraft:cobblestone")
-                        placeUpBlock("minecraft:cobblestone")
-                        moveBackward()
-                        placeBlock("minecraft:cobblestone")
-                        moveBackward()
-                    end
-
-                    turnRight()
-                end
+                buildShaftWall(61, true)
 
                 buildMineCorner()
 
                 turnRight()
 
-                for i=1,12 do
-                    moveForward()
-
-                    turnLeft()
-
-                    moveForward()
-                    turtle.digUp()
-                    turtle.digDown()
-
-                    moveForward()
-                    turtle.digUp()
-                    turtle.digDown()
-
-                    if (math.fmod(xPos, 4) == -2 or math.fmod(xPos, 4) == 2) or (math.fmod(yPos, 4) == -2 or math.fmod(yPos, 4) == 2) then
-                        placeDownBlock("minecraft:stone")
-                        placeUpBlock("minecraft:stone")
-                        moveBackward()
-                        placeBlock("minecraft:stone")
-
-                        placeDownBlock("minecraft:stone")
-                        placeUpBlock("minecraft:stone")
-                        moveBackward()
-                        placeBlock("minecraft:stone")
-                    else
-                        placeDownBlock("minecraft:cobblestone")
-                        placeUpBlock("minecraft:cobblestone")
-                        moveBackward()
-                        placeBlock("minecraft:cobblestone")
-                        moveBackward()
-                    end
-
-                    turnRight()
-                end
+                buildShaftWall(12)
 
                 sleep(3)
 
@@ -911,8 +806,6 @@ while true do
             exit()
 
             returnHome()
-
-            
 
         end
     else
