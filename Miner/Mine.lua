@@ -378,27 +378,43 @@ returnHome = function()
 
 end
 
+local ignoreBlocksDefault =  {
+    "minecraft:andesite",
+    "minecraft:bedrock",
+    "minecraft:cobblestone",
+    "minecraft:diorite",
+    "minecraft:dirt",
+    "minecraft:granite",
+    "minecraft:gravel",
+    "minecraft:red_sand",
+    "minecraft:sand",
+    "minecraft:stone",
+    "minecraft:stone_bricks",
+}
+
 if not settings.load(turtleStateFilename) then 
-    settings.get("xSize", 9)
-    settings.get("ySize", 9)
-    settings.set("xPos", -1)
+    settings.set("xSize", 9)
+    settings.set("ySize", 9)
+    settings.set("xPos", 0)
     settings.set("yPos", 0)
-    settings.set("zPos", 1)
+    settings.set("zPos", 0)
     settings.set("isFacing", 0)
     settings.set("firstRun", true)
     settings.set("aboveGround", true)
     settings.set("currentStep", {})
+    settings.set("ignoreBlocks", ignoreBlocksDefault)
     settings.save(turtleStateFilename)
 end
 
 xSize = settings.get("xSize", 9)
 ySize = settings.get("ySize", 9)
-xPos = settings.get("xPos", -1)
+xPos = settings.get("xPos", 0)
 yPos = settings.get("yPos", 0)
-zPos = settings.get("zPos", 1)
+zPos = settings.get("zPos", 0)
 firstRun = settings.get("firstRun", true)
 aboveGround = settings.get("aboveGround", true)
 isFacing = settings.get("isFacing", 0)
+ignoreBlocks = settings.get("ignoreBlocks", ignoreBlocksDefault)
 
 if xPos == 0 and yPos == 0 and zPos == 0 then
     print("I am already home")
@@ -544,7 +560,7 @@ while true do
 
             turnToDir(i)
 
-            for shaftStage = 4, 16 do
+            for shaftStage = 7, 16 do
 
             if shaftStage == 0 then
 
@@ -799,6 +815,152 @@ while true do
 
                 sleep(3)
 
+                returnHome()
+
+            elseif shaftStage == 5 then
+                for i=1,18 do
+                    moveForward()
+                    
+                    if math.fmod(xPos, 4) == 3 then
+                        turnLeft()
+                        turtle.dig()
+                        placeBlock("druidcraft:fiery_torch")
+                        turnRight()
+                        turnRight()
+                        turtle.dig()
+                        placeBlock("druidcraft:fiery_torch")
+                        turnLeft()
+                    end
+                end
+
+                turnLeft()
+
+                for i=1,14 do
+                    moveForward()
+
+                    if math.fmod(yPos, 4) == -2 then
+                        turnLeft()
+                        turtle.dig()
+                        placeBlock("druidcraft:fiery_torch")
+                        turnRight()
+                    end  
+                end
+
+                turtle.dig()
+                placeBlock("druidcraft:fiery_torch")
+                turnRight()
+
+                for i=1,60 do
+                    moveForward()
+
+                    if math.fmod(xPos, 4) == 2 then
+                        turnLeft()
+                        turtle.dig()
+                        placeBlock("druidcraft:fiery_torch")
+                        turnRight()
+                    end  
+                end
+
+                turtle.dig()
+                placeBlock("druidcraft:fiery_torch")
+                turnRight()
+
+                for i=1,28 do
+                    moveForward()
+
+                    if math.fmod(yPos, 4) == -2 or math.fmod(yPos, 4) == 2 then
+                        turnLeft()
+                        turtle.dig()
+                        placeBlock("druidcraft:fiery_torch")
+                        turnRight()
+                    end  
+                end
+
+                turtle.dig()
+                placeBlock("druidcraft:fiery_torch")
+                turnRight()
+
+                for i=1,60 do
+                    moveForward()
+
+                    if math.fmod(xPos, 4) == 2 then
+                        turnLeft()
+                        turtle.dig()
+                        placeBlock("druidcraft:fiery_torch")
+                        turnRight()
+                    end  
+                end
+
+                turtle.dig()
+                placeBlock("druidcraft:fiery_torch")
+                turnRight()
+
+                for i=1,14 do
+                    moveForward()
+
+                    if math.fmod(yPos, 4) == 2 then
+                        turnLeft()
+                        turtle.dig()
+                        placeBlock("druidcraft:fiery_torch")
+                        turnRight()
+                    end  
+                end
+
+                returnHome()
+            elseif shaftStage == 6 then
+                for i=1,78 do
+                    if i >= 18 and math.fmod(xPos, 4) == 0 then
+                        local calcYMoveNeg = -1 * xPos
+                        local calcYMovePos = xPos
+                        turnToDir(3)
+                        while yPos >= calcYMoveNeg do
+                            moveForward()
+                        end
+                        turtle.digDown()
+                        moveDown()
+                        turnToDir(1)
+                        while yPos <= calcYMovePos do
+                            moveForward()
+                            if yPos == 0 then
+                                while zPos ~= 0 do
+                                    if zPos > 0 then
+                                        turtle.digDown()
+                                        moveDown()
+                                    elseif zPos < 0 then
+                                        turtle.digUp()
+                                        moveUp()
+                                    end
+                                end
+                            end
+                        end
+                        turtle.digDown()
+                        moveDown()
+                        turnToDir(3)
+                        while yPos ~= 0 do
+                            if yPos > 0 then
+                                turnToDir(3)
+                                moveForward()
+                            elseif yPos < 0 then
+                                turnToDir(1)
+                                moveForward()
+                            end
+                        end
+
+                        while zPos ~= 0 do
+                            if zPos > 0 then
+                                turtle.digDown()
+                                moveDown()
+                            elseif zPos < 0 then
+                                turtle.digUp()
+                                moveUp()
+                            end
+                        end
+
+                        turnToDir(0)
+                       
+                    end
+                    moveForward()
+                end
                 returnHome()
 
             end

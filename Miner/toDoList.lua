@@ -26,8 +26,7 @@
 --                    unloadDir     - x0, y0, z-1, f2
 --                    fuel          - x0, y0, z-1, f3
 --                    Stone         - x0, y0, z1, f0
---    Make it configurable.
---                   
+--                    
 -- 5. Make functions for each turtle.dig direction that scans inventory space
 --    so the tutrle can return home before it gets full and unloads. Then 
 --    depending on what of the cycle restock with certain items that is needed
@@ -36,4 +35,4 @@
 --    Investigate whether this loop is better place in the move function before
 --    turtle moves.
 --
--- 6. Dig ores in the floor on first run, when clearing the shaft.
+-- 6. 
