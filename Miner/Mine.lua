@@ -8,6 +8,121 @@ turtleStateFilename = "turtleState"
 
 -- Functions                        --
 
+getReverseDir = function(dir)
+    if dir == 0 then
+        return 2
+    elseif dir == 1 then
+        return 3
+    elseif dir == 2 then
+        return 0
+    elseif dir == 3 then
+        return 1
+    elseif dir == 4 then
+        return 5
+    elseif dir == 5 then
+        return 4
+    end
+end
+
+digOreVane = function()
+    stepIndex = 0
+    steps = {}
+
+    repeat
+        steps[stepIndex] = steps[stepIndex] or 0
+
+        if stepIndex <= 100 then
+            steps[stepIndex] = findOre()
+        else
+            steps[stepIndex] = false
+        end
+
+        if steps[stepIndex] ~= false then
+            if ((stepIndex == 0) or (steps[stepIndex] ~= getReverseDir(steps[stepIndex - 1]))) then
+                if steps[stepIndex] < 4 then
+                    if moveForward() then
+                        stepIndex = stepIndex + 1    
+                    end
+                elseif steps[stepIndex] == 4 then
+                    if moveUp() then
+                        stepIndex = stepIndex + 1  
+                    end
+                elseif steps[stepIndex] == 5 then
+                    if moveDown() then
+                        stepIndex = stepIndex + 1  
+                    end
+                end    
+            end
+        else
+            steps[stepIndex] = false
+            stepIndex = stepIndex - 1
+            if stepIndex >= 0 then
+                if getReverseDir(steps[stepIndex]) < 4 then
+                    turnToDir(getReverseDir(steps[stepIndex]))
+                    if moveForward() then
+                        
+                    end
+                elseif getReverseDir(steps[stepIndex]) == 4 then
+                    if moveUp() then
+                        
+                    end
+                elseif getReverseDir(steps[stepIndex]) == 5 then
+                    if moveDown() then
+                        
+                    end
+                end 
+            end
+        end
+    until stepIndex < 0
+end
+
+findOre = function()
+    local initialDirection = isFacing
+
+    for i=0,5 do
+        if i < 4 then
+            turnToDir(i)
+            if turtle.detect() then
+                if not inIgnoreList(i) then return i end
+            end
+        elseif i == 4 then
+            if turtle.detectUp() then
+                if not inIgnoreList(i) then return i end
+            end
+        elseif i == 5 then
+            if turtle.detectDown() then
+                if not inIgnoreList(i) then return i end
+            end
+        end
+    end
+
+    turnToDir(initialDirection)
+    return false
+end
+
+inIgnoreList = function(direction)
+    local success, blockData = false
+    if direction < 4 then
+        success, blockData = turtle.inspect()
+    elseif direction == 4 then
+        success, blockData = turtle.inspectUp()
+    elseif direction == 5 then
+        success, blockData = turtle.inspectDown()
+    end
+
+    print(blockData)
+
+    if blockData then
+        for blocks=1,table.getn(ignoreBlocks) do
+            if ignoreBlocks[blocks] == blockData.name then
+                return true
+            end 
+        end
+    end
+
+    return false
+end
+
 findItem = function(itemName)
     for i=1,16,1 do 
         itemData = turtle.getItemDetail(i)
@@ -138,8 +253,8 @@ moveForward = function()
 
     while not hasMoved do
         if not turtle.forward() then
-            if tries == 16 then
-                error("Unable to move.")
+            if tries > 16 then
+                return false
             end
 
             turtle.dig()
@@ -159,7 +274,7 @@ moveForward = function()
                 settings.set("yPos", yPos)
             end
             settings.save(turtleStateFilename)
-            hasMoved = true
+            return true
         end
     end
 end
@@ -186,25 +301,46 @@ moveBackward = function()
 end
 
 moveUp = function()
-    if not turtle.up() then
-        error("Unable to move.")
-    else
-        zPos = zPos + 1
-        settings.set("zPos", zPos)
-        settings.save(turtleStateFilename)
+    local hasMoved = false
+    local tries = 0
+
+    while not hasMoved do
+        if not turtle.up() then
+            if tries > 16 then
+                return false
+            end
+
+            turtle.digUp()
+            tries = tries + 1
+        else
+            zPos = zPos + 1
+            settings.set("zPos", zPos)
+            settings.save(turtleStateFilename)
+            return true
+        end
     end
 end
 
 moveDown = function()
-    if not turtle.down() then
-        error("Unable to move.")
-    else
-        zPos = zPos - 1
-        settings.set("zPos", zPos)
-        settings.save(turtleStateFilename)
+    local hasMoved = false
+    local tries = 0
+
+    while not hasMoved do
+        if not turtle.down() then
+            if tries > 16 then
+                return false
+            end
+
+            turtle.digDown()
+            tries = tries + 1
+        else
+            zPos = zPos - 1
+            settings.set("zPos", zPos)
+            settings.save(turtleStateFilename)
+            return true
+        end
     end
-end
-    
+end  
 
 returnToPos = function(x,y,z,f)
     while xPos ~= x do
@@ -560,7 +696,7 @@ while true do
 
             turnToDir(i)
 
-            for shaftStage = 7, 16 do
+            for shaftStage = 6, 16 do
 
             if shaftStage == 0 then
 
@@ -575,7 +711,7 @@ while true do
 
                 turnLeft()
 
-                for i=0,14 do
+                for i=0,16 do
                     turtle.dig()
                     moveForward()
                     turtle.digUp()
@@ -611,12 +747,12 @@ while true do
                             hasSpace = true
                         end
 
-                        if xPos >= (80 - 1) and yPos >= (16 - 1) then
+                        if xPos >= (83) and yPos >= (17) then
                             returnHome()
                             break
                         end
                         
-                        if xPos == (80 - 1) then
+                        if xPos == (83) then
                             turnRight()
                             moveForward()
                             turtle.digUp()
@@ -624,7 +760,7 @@ while true do
                             turnRight()
                         end
                         
-                        if xPos == 17 and yPos ~= -15 then
+                        if xPos == 17 and yPos ~= -17 then
                             turnLeft()
                             moveForward()
                             turtle.digUp()
@@ -636,11 +772,11 @@ while true do
                         turtle.digUp()
                         turtle.digDown()
 
-                        if xPos > 19 and xPos < 77 and yPos > -13 and yPos < 13 then
+                        if xPos > 21 and xPos < 79 and yPos > -13 and yPos < 13 then
                             moveDown()
                             turtle.digDown()
 
-                            if ((math.fmod(xPos, 4) == -2 or math.fmod(xPos, 4) == 2) and (math.fmod(yPos, 4) == -2 or math.fmod(yPos, 4) == 2)) or ((yPos == -12 or yPos == 12) and (math.fmod(xPos, 4) == -2 or math.fmod(xPos, 4) == 2)) or ((xPos == 20 or xPos == 76) and (math.fmod(yPos, 4) == -2 or math.fmod(yPos, 4) == 2)) then
+                            if ((math.fmod(xPos, 4) == -2 or math.fmod(xPos, 4) == 2) and (math.fmod(yPos, 4) == -2 or math.fmod(yPos, 4) == 2)) or ((yPos == -12 or yPos == 12) and (math.fmod(xPos, 4) == -2 or math.fmod(xPos, 4) == 2)) or ((xPos == 22 or xPos == 78) and (math.fmod(yPos, 4) == -2 or math.fmod(yPos, 4) == 2)) then
                                 placeDownBlock("druidcraft:fiery_torch")
                             end
 
@@ -674,11 +810,11 @@ while true do
                 local test1 = 0
 
                 while true do
-                    if xPos >= (18 - 1) and yPos >= (3 - 1) then
+                    if xPos >= (20) and yPos >= (3 - 1) then
                         break
                     end
                     
-                    if xPos == (18 - 1) then
+                    if xPos == (20) then
                         turnRight()
                         moveForward()
                         turtle.digUp()
@@ -735,11 +871,11 @@ while true do
 
                     
 
-                    if xPos >= (18 - 1) and yPos >= (3 - 1) then
+                    if xPos >= (20) and yPos >= (3 - 1) then
                         break
                     end
                     
-                    if xPos == (18 - 1) then
+                    if xPos == (20) then
                         turnRight()
                         moveBackward()
                         turnRight()
@@ -759,7 +895,7 @@ while true do
                         turnLeft()
                     end
                     
-                    if xPos < (18 - 1) then
+                    if xPos < (20) then
                         if (yPos < -1 or yPos > 1) then
                             placeDownBlock("minecraft:stone")
                             placeUpBlock("minecraft:stone")
@@ -777,7 +913,7 @@ while true do
                 returnHome()
 
             elseif shaftStage == 4 then
-                for i=0,16 do
+                for i=0,18 do
                     moveForward()
                 end
 
@@ -818,7 +954,7 @@ while true do
                 returnHome()
 
             elseif shaftStage == 5 then
-                for i=1,18 do
+                for i=1,20 do
                     moveForward()
                     
                     if math.fmod(xPos, 4) == 3 then
@@ -909,17 +1045,78 @@ while true do
                 returnHome()
             elseif shaftStage == 6 then
                 for i=1,78 do
-                    if i >= 18 and math.fmod(xPos, 4) == 0 then
+                    if i >= 20 and math.fmod(xPos, 4) == 0 then
                         local calcYMoveNeg = -1 * xPos
                         local calcYMovePos = xPos
+                        local hasSpace = true
+
                         turnToDir(3)
                         while yPos >= calcYMoveNeg do
+                            digOreVane()
+                            turnToDir(3)
+
+                            for items=1,15 do
+                                if turtle.getItemCount(items) == 0 then
+                                    hasSpace = true
+                                    turtle.select(1)
+                                    break
+                                else
+                                    hasSpace = false 
+                                end
+                            end
+    
+                            if not hasSpace then
+                                local x = xPos
+                                local y = yPos
+                                local z = zPos
+                                local f = isFacing
+    
+                                returnHome()
+                                offLoad()
+                                returnToPos(x,y,z,f)
+    
+                                hasSpace = true
+                            end
+
                             moveForward()
                         end
                         turtle.digDown()
                         moveDown()
                         turnToDir(1)
                         while yPos <= calcYMovePos do
+                            digOreVane()
+
+                            if zPos == -1 then
+                                if (math.fmod(yPos, 6) == -2 or math.fmod(yPos,6) == 2) then
+                                    placeUpBlock("druidcraft:fiery_torch")
+                                end
+                            end
+
+                            turnToDir(1)
+                            
+                            for items=1,15 do
+                                if turtle.getItemCount(items) == 0 then
+                                    hasSpace = true
+                                    turtle.select(1)
+                                    break
+                                else
+                                    hasSpace = false 
+                                end
+                            end
+    
+                            if not hasSpace then
+                                local x = xPos
+                                local y = yPos
+                                local z = zPos
+                                local f = isFacing
+    
+                                returnHome()
+                                offLoad()
+                                returnToPos(x,y,z,f)
+    
+                                hasSpace = true
+                            end
+
                             moveForward()
                             if yPos == 0 then
                                 while zPos ~= 0 do
@@ -937,12 +1134,43 @@ while true do
                         moveDown()
                         turnToDir(3)
                         while yPos ~= 0 do
+                            digOreVane()
+
                             if yPos > 0 then
-                                turnToDir(3)
-                                moveForward()
+                                turnToDir(3) 
                             elseif yPos < 0 then
                                 turnToDir(1)
-                                moveForward()
+                            end
+                            
+                            if zPos == -1 then
+                                if (math.fmod(yPos, 6) == -2 or math.fmod(yPos,6) == 2) then
+                                    placeUpBlock("druidcraft:fiery_torch")
+                                end
+                            end
+
+                            moveForward()
+
+                            for items=1,15 do
+                                if turtle.getItemCount(items) == 0 then
+                                    hasSpace = true
+                                    turtle.select(1)
+                                    break
+                                else
+                                    hasSpace = false 
+                                end
+                            end
+    
+                            if not hasSpace then
+                                local x = xPos
+                                local y = yPos
+                                local z = zPos
+                                local f = isFacing
+    
+                                returnHome()
+                                offLoad()
+                                returnToPos(x,y,z,f)
+    
+                                hasSpace = true
                             end
                         end
 
@@ -958,6 +1186,9 @@ while true do
 
                         turnToDir(0)
                        
+                    end
+                    if xPos > 2 then
+                        turtle.digDown()
                     end
                     moveForward()
                 end
