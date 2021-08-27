@@ -398,7 +398,7 @@ while true do
 
     if setup then 
         checkTool("minecraft:diamond_pickaxe")
-        if xPos == 0 or zPos == 0 or xPos == farmWidth or zPos == farmLength then  
+        if (xPos == 0 and zPos ~= -1) or zPos == 0 or xPos == farmWidth or zPos == farmLength then  
             turtle.digDown()
         end
 
@@ -413,21 +413,26 @@ while true do
         end
     else
         checkTool("minecraft:diamond_hoe")
+        break 
     end
 
-    if zPos == farmLength and xPos < farmWidth then
-        turnRight()
-        moveForward()
-        turnRight()
+    if zPos == farmLength and xPos <= farmWidth then
+        if math.fmod(xPos, 2) == 0 and xPos < farmWidth then
+            turnToDir(1)
+        elseif math.fmod(xPos, 2) == 1 then 
+            turnToDir(2)
+        end
     end
 
-    if zPos == 0 and xPos ~= 0 and xPos < farmWidth then
-        turnLeft()
-        moveForward()
-        turnLeft()
+    if zPos == 0 and xPos ~= 0 and xPos <= farmWidth then
+        if math.fmod(xPos, 2) == 1 and xPos < farmWidth then
+            turnToDir(1)
+        elseif math.fmod(xPos, 2) == 0 then 
+            turnToDir(0)
+        end
     end
 
-    if zPos >= farmLength and xPos >= farmWidth or zPos == 0 and xPos >= farmWidth then
+    if zPos >= farmLength and xPos >= farmWidth and math.fmod(xPos, 2) == 0 or zPos == 0 and xPos >= farmWidth and math.fmod(xPos, 2) == 1 then
         goToPosition(newPosition)
         turnToDir(startDir)
         setup = false
